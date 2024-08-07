@@ -12,7 +12,7 @@
 
 🎫 Create a simple NFT using LSP8 on LUKSO:
 
-👷‍♀️ You'll compile and deploy your first LSP smart contract learning the differences between an LSP8 (new NFT standard) and an ERC721 (old standard). Then, you'll use a template React app full of important Ethereum components and hooks. Finally, you'll deploy an NFT to the public LUKSO testnet network to share with friends! 🚀
+👷‍♀️ You'll compile and deploy your first LSP8 smart contract learning the differences between an LSP8 (new NFT standard) and an ERC721 (old standard). Then, you'll use a template React app full of important Ethereum components and hooks. Finally, you'll deploy an NFT to the public LUKSO testnet network to share with friends! 🚀
 
 🌟 The final deliverable is an app that lets users purchase and transfer NFTs. Deploy your contracts to LUKSO testnet, then build and upload your app to a public web server. Submit the url on [TODO]()!
 
