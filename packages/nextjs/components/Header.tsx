@@ -20,7 +20,12 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/",
   },
   {
-    label: "Token Vendor",
+    label: "ERC20 Token Vendor",
+    href: "/token-vendor",
+    icon: <CircleStackIcon className="h-4 w-4" />,
+  },
+  {
+    label: "LSP7 Token Vendor",
     href: "/token-vendor",
     icon: <CircleStackIcon className="h-4 w-4" />,
   },
@@ -103,8 +108,8 @@ export const Header = () => {
             <Image alt="SE2 logo" className="cursor-pointer" fill src="/logo.svg" />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold leading-tight">SRE Challenges</span>
-            <span className="text-xs">#2: Token Vendor</span>
+            <span className="font-bold leading-tight">SRL Challenges</span>
+            <span className="text-xs">#2: Token Vendor with LSP7</span>
           </div>
         </Link>
         <ul className="hidden xl:flex xl:flex-nowrap menu menu-horizontal px-1 gap-2">
