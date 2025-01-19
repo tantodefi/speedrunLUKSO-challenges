@@ -38,31 +38,11 @@ https://github.com/scaffold-eth/se-2-challenges/tree/challenge-3-dice-game
 
 ---
 
-## 🚩 Challenge 4: ⚖️ Build a DEX Challenge
+## 🎉 Checkpoint: Eligible to submit your own build on speedrunLUKSO.com
 
-💵 Build an exchange that swaps ETH to tokens and tokens to ETH. 💰 This is possible because the smart contract holds reserves of both assets and has a price function based on the ratio of the reserves. Liquidity providers are issued a token that represents their share of the reserves and fees...
+A place to show off your builds and meet other builders. Start crafting your Web3 portfolio by submitting your DEX, Multisig or SVG NFT build and shipping them on lukso netowork! 
 
-DEX Telegram Channel: https://t.me/+_NeUIJ664Tc1MzIx
-
-https://github.com/scaffold-eth/se-2-challenges/tree/challenge-4-dex
-
----
-
-## 🎉 Checkpoint: Eligible to join 🏰️ BuidlGuidl
-
-The BuidlGuidl is a curated group of Ethereum builders creating products, prototypes, and tutorials to enrich the web3 ecosystem. A place to show off your builds and meet other builders. Start crafting your Web3 portfolio by submitting your DEX, Multisig or SVG NFT build.
-
-https://buidlguidl.com/
-
----
-
-## 🚩 Challenge 5: 📺 State Channel Application Challenge
-
-🛣️ The Ethereum blockchain has great decentralization & security properties but these properties come at a price: transaction throughput is low, and transactions can be expensive. This makes many traditional web applications infeasible on a blockchain... or does it? State channels look to solve these problems by allowing participants to securely transact off-chain while keeping interaction with Ethereum Mainnet at a minimum.
-
-State Channels Telegram Channel: https://t.me/+k0eUYngV2H0zYWUx
-
-https://github.com/scaffold-eth/se-2-challenges/tree/challenge-5-state-channels
+https://speedrunlukso.com/
 
 ---
 
@@ -88,12 +68,12 @@ The main page should have a banner image (ask for it!) + the Challenge descripti
 > A {challengeDescription}.
 >
 > 🌟 The final deliverable is an app that {challengeDeliverable}.
-> Deploy your contracts to a testnet then build and upload your app to a public web server. Submit the url on [SpeedRunEthereum.com](https://speedrunethereum.com)!
+> Deploy your contracts to a testnet then build and upload your app to a public web server. Submit the url on [SpeedRunLUKSO.com](https://speedrunlukso.com)!
 
 ### 3. Implement the Challenge
 
 - Add the contract(s)
-- Add pages / components as you need (UI following the [SpeedRunEthereum.com](https://speedrunethereum.com/) design vibe)
+- Add pages / components as you need (UI following the [SpeedRunLUKSO.com](https://speedrunlukso.com/) design vibe)
 - Create the test for the Smart Contract(s). The best starting point is to copy the tests from the SE1 Challenge you are migrating. The "envvar" logic there is used by the autograder, so don't remove them.
 
 ### 4. Adapt Header / MetaHeader component
