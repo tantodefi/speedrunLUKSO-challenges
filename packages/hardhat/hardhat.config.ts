@@ -118,6 +118,13 @@ const config: HardhatUserConfig = {
       url: "https://sepolia.publicgoods.network",
       accounts: [deployerPrivateKey],
     },
+    luksoTestnet: {
+      url: "https://rpc.testnet.lukso.network",
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+      },
+      chainId: 4201,
+    },
   },
   // configuration for harhdat-verify plugin
   etherscan: {
