@@ -14,11 +14,11 @@
 
 👷‍♀️ You'll compile and deploy your first LSP8 smart contract learning the differences between an LSP8 (new NFT standard) and an ERC721 (old standard). Then, you'll use a template React app full of important Ethereum components and hooks. Finally, you'll deploy an NFT to the public LUKSO testnet network to share with friends! 🚀
 
-🌟 The final deliverable is an app that lets users purchase and transfer NFTs. Deploy your contracts to LUKSO testnet, then build and upload your app to a public web server. Submit the url on [TODO]()!
+🌟 The final deliverable is an app that lets users purchase and transfer NFTs. Deploy your contracts to LUKSO testnet, then build and upload your app to a public web server. Submit the url on [speedrunlukso.com](https://speedrunlukso.com/sbmit)!
 
-💬 Meet other builders working on this challenge and get help in the [SpeedRunLUKSO Commonground]()!
+💬 Meet other builders working on this challenge and get help in the [SpeedRunLUKSO Telegram](https://t.me/+DlLg2q8IeII4Mjhh)!
 
-🤖 If you have any question during your Challenge, you can try out the [Cookbook.dev ChefGPT](https://www.cookbook.dev/contracts/BurntPunx-BurntPunX), and get answers to your Challenge/Scaffold-ETH questions. Please reach us in Commonground if something feels wrong!
+🤖 If you have any question during your Challenge, you can try out the [Cookbook.dev ChefGPT](https://www.cookbook.dev/contracts/BurntPunx-BurntPunX)
 
 ## Checkpoint 0: 📦 Environment 📚
 
@@ -262,7 +262,7 @@ await contract.setDataBatch(
 
 This verifies the creator's address on-chain and allows marketplaces and other applications to display verified creator information for your collection.
 
-Now you're ready to deploy your LSP8 NFT contract to LUKSO testnet! Continue to the next checkpoint to deploy your contract.
+Now you're ready to deploy your LSP8 NFT contract to LUKSO testnet! Continue to the next checkpoint to deploy your contract. You might also checkout this blog post if you get stuck deploying your LSP8 contract: [Deploying LSP8 NFTs on LUKSO](https://medium.com/lukso/build-your-first-nft-collection-on-lukso-a984743e07af#:~:text=To%20set%20up%20our%20NFT,format%20of%20tokenIds%20that%20the)
 
 ---
 
