@@ -150,11 +150,119 @@ yarn start
 
 ## Checkpoint 4: 💡 Learn the differences between ERC721 and LSP8! ⚡
 
-#TODO: 
-- summarize differences of erc721 and lsp8 
-- show how to modify 'YourCollectible.sol' to be an LSP8
-- redeploy the final 'YourLSP8Collectible.sol'
-- show how to setMetadata.ts for the newly deployed lsp8
+The LSP8 standard is LUKSO's evolution of the ERC721 NFT standard, bringing several key improvements and new features:
+
+### Key Differences:
+
+1. **Token ID Format**
+   - ERC721: Uses `uint256` for token IDs
+   - LSP8: Uses `bytes32` for token IDs, allowing more flexible ID schemes (numbers, hashes, or other formats)
+
+2. **Metadata Handling**
+   - ERC721: Relies on optional URI standard (ERC721Metadata)
+   - LSP8: Built-in metadata support through LSP4 Digital Asset Metadata standard, enabling richer on-chain metadata
+
+3. **Operator Permissions**
+   - ERC721: Simple approve/transfer system
+   - LSP8: More granular operator permissions with specific token authorizations
+
+4. **Transfer Hooks**
+   - ERC721: Basic transfer events
+   - LSP8: Enhanced transfer hooks with before/after transfer validations and data parameter support
+
+5. **Error Handling**
+   - ERC721: Basic require statements
+   - LSP8: Standardized error codes and messages across all LSP standards
+
+6. **Interface Detection**
+   - ERC721: Uses ERC165 interface detection
+   - LSP8: Uses LSP1 Universal Receiver for enhanced interface detection and cross-contract interaction
+
+### Modifying Your Contract
+
+To convert your NFT contract to use LSP8:
+
+1. Update your imports to use LSP8 instead of ERC721:
+```solidity
+import "@lukso/lsp-smart-contracts/contracts/LSP8IdentifiableDigitalAsset/LSP8IdentifiableDigitalAsset.sol";
+```
+
+2. Inherit from LSP8 base contract:
+```solidity
+contract YourLSP8Collectible is LSP8IdentifiableDigitalAsset {
+    // ... contract code
+}
+```
+
+3. Update your constructor:
+```solidity
+constructor(
+    string memory name,
+    string memory symbol,
+    address contractOwner
+) LSP8IdentifiableDigitalAsset(name, symbol, contractOwner, LSP8_TOKENID_FORMAT_NUMBER) {
+    // initialization
+}
+```
+
+4. Modify minting function to use bytes32:
+```solidity
+function mint(address to, bytes32 tokenId, bytes memory data) public {
+    _mint(to, tokenId, true, data);
+}
+```
+
+We've created this contract for you in `packages/hardhat/contracts/YourLSP8Collectible.sol`
+
+See if you can't properly deploy and wire up the contract to the correct page on the frontend.
+
+### Setting Metadata
+
+After deploying your LSP8 contract, you'll need to set the metadata using the LSP4 Digital Asset Metadata standard. This can be done using the `setMetadata.ts` script:
+
+```typescript
+await contract.setData(
+    LSP4_METADATA_KEY,
+    encodeMetadata({
+        name: "Your Collection",
+        description: "Your NFT Collection Description",
+        images: [{
+            width: 1000,
+            height: 1000,
+            url: "ipfs://your-image-hash",
+        }],
+    })
+);
+```
+
+You'll also want to set the verified creators for your collection. This is a unique feature of LSP8 that allows you to specify the authentic creators of the collection:
+
+```typescript
+import { ERC725YDataKeys } from '@lukso/lsp-smart-contracts';
+
+// Set the verified creators
+const creatorAddress = "0x..."; // Your creator address
+const ARRAY_LENGTH = ERC725YDataKeys.LSP4["LSP4Creators[]"].length;
+const ARRAY_KEY = ERC725YDataKeys.LSP4["LSP4Creators[]"].key;
+const CREATOR_KEY = ERC725YDataKeys.LSP4.LSP4CreatorsMap + creatorAddress.substring(2);
+
+await contract.setDataBatch(
+    [
+        ARRAY_LENGTH,
+        ARRAY_KEY,
+        CREATOR_KEY
+    ],
+    [
+        "0x0000000000000000000000000000000000000000000000000000000000000001", // One creator
+        "0x" + creatorAddress.substring(2).padStart(64, "0"),
+        "0x" + "00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001" // Creator with 2 permissions: isCreator (0x02) and true (0x01)
+    ]
+);
+```
+
+This verifies the creator's address on-chain and allows marketplaces and other applications to display verified creator information for your collection.
+
+Now you're ready to deploy your LSP8 NFT contract to LUKSO testnet! Continue to the next checkpoint to deploy your contract.
 
 ---
 
