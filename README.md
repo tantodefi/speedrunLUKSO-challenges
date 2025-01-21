@@ -78,6 +78,94 @@ yarn start
 
 > 💬 Hint: Use an incognito window to create a new address and try sending to that new address. Can use the `transfer()` function in the `Debug Contracts` tab.
 
+## Checkpoint 1.5: 🏵 Your LSP7 Token 💵
+
+LSP7 is LUKSO's evolution of the ERC20 token standard, bringing several key improvements and new features:
+
+### Key Differences from ERC20:
+
+1. **Force Transfers**
+   - ERC20: No built-in force transfer capability
+   - LSP7: Supports optional force transfers through `isForceTransfer` parameter
+
+2. **Transfer Data**
+   - ERC20: Simple transfer with no data parameter
+   - LSP7: All transfers can include arbitrary data payload for hooks and notifications
+
+3. **Operator Permissions**
+   - ERC20: Basic approve/allowance system
+   - LSP7: More granular operator system with revocation and data parameters
+
+4. **Metadata Support**
+   - ERC20: No standardized metadata
+   - LSP7: Built-in LSP4 Digital Asset Metadata standard support
+
+5. **Error Handling**
+   - ERC20: Basic require statements
+   - LSP7: Standardized error codes across all LSP standards
+
+### Setting Up Your LSP7 Token
+
+We've created a basic LSP7 token contract in `packages/hardhat/contracts/YourLSP7Token.sol`. Key features:
+- Inherits from LSP7DigitalAsset
+- Includes minting and burning capabilities
+- Mints initial 1000 tokens to contract owner
+- Supports force transfers by default
+
+### Setting Token Metadata
+
+After deploying your LSP7 token, you'll need to set its metadata. Create a script like this:
+
+```typescript
+import { ERC725YDataKeys } from '@lukso/lsp-smart-contracts';
+
+// First, set the basic token metadata
+await token.setData(
+    LSP4_METADATA_KEY,
+    encodeMetadata({
+        name: "Your LSP7 Token",
+        symbol: "LSP7",
+        description: "My awesome LSP7 token on LUKSO",
+        links: [{
+            title: "Website",
+            url: "https://your-website.com"
+        }],
+    })
+);
+
+// Then set verified creators (optional but recommended)
+const creatorAddress = "0x..."; // Your creator address
+const ARRAY_LENGTH = ERC725YDataKeys.LSP4["LSP4Creators[]"].length;
+const ARRAY_KEY = ERC725YDataKeys.LSP4["LSP4Creators[]"].key;
+const CREATOR_KEY = ERC725YDataKeys.LSP4.LSP4CreatorsMap + creatorAddress.substring(2);
+
+await token.setDataBatch(
+    [
+        ARRAY_LENGTH,
+        ARRAY_KEY,
+        CREATOR_KEY
+    ],
+    [
+        "0x0000000000000000000000000000000000000000000000000000000000000001", // One creator
+        "0x" + creatorAddress.substring(2).padStart(64, "0"),
+        "0x" + "00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001" // Creator with permissions
+    ]
+);
+```
+
+### 🥅 Goals
+
+- [ ] Deploy your LSP7 token and verify it works in the `Debug Contracts` tab
+- [ ] Set proper metadata for your token using the LSP4 standard
+- [ ] Try out force transfers and understand how they differ from ERC20
+- [ ] Test the operator functionality with the improved permission system
+
+### ⚔️ Side Quest: Enhanced Features
+
+- [ ] Add custom transfer hooks using the data parameter
+- [ ] Implement token vesting using the operator system
+- [ ] Create a more complex metadata structure with images and links
+
 ---
 
 ## Checkpoint 2: ⚖️ Vendor 🤖
