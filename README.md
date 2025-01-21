@@ -34,7 +34,73 @@ https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-2-token-vendor
 
 🎰 Randomness is tricky on a public deterministic blockchain. In this challenge you will explore creating random numbers using block hash and how that may be exploitable. Attack the dice game with your own contract by predicting the randomness ahead of time to always roll a winner!
 
-h[ttps://github.com/scaffold-eth/se-2-challenges](https://github.com/tantodefi/SpeedRunLUKSO)/tree/challenge-3-dice-game
+https://github.com/tantodefi/SpeedRunLUKSO)/tree/challenge-3-dice-game
+
+---
+
+## 🚩 Challenge 4: 🎨 SVG LSP8 NFT
+
+🎨 Create an SVG NFT using LSP8 on LUKSO. You'll learn how to create an SVG NFT and how to use LSP8 to create a collection of NFTs. You'll also learn how to use the LSP8 contract to set the creators of the collection.
+
+https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-7-svg-nft
+
+---
+
+## 🚩 Challenge 5: 🔗 Grid Dapp Challenge
+
+🌐 Create an interactive grid application on LUKSO that leverages Universal Profiles for enhanced user interaction and ownership. This challenge introduces you to building decentralized social experiences using LUKSO's powerful standards.
+
+### Why Build on LUKSO with Universal Profiles?
+
+1. **Enhanced User Identity**
+   - Universal Profiles provide rich user identities with built-in metadata
+   - Users can interact with your grid using their established digital identity
+   - Profile pictures, usernames, and social links are readily available
+
+2. **Native Social Features**
+   - LSP2 Schema allows for standardized social connections
+   - Build follower/following systems using Universal Profile relationships
+   - Create social interactions that persist across different dapps
+
+3. **Improved Asset Ownership**
+   - Grid cells can be owned as LSP8 NFTs
+   - Universal Profiles can hold and manage multiple digital assets
+   - Seamless integration with LUKSO's digital asset standards
+
+4. **Cross-Platform Compatibility**
+   - Grid data and ownership is accessible across any LUKSO dapp
+   - Universal Profiles work as single sign-on for your application
+   - Build features that integrate with other LUKSO applications
+
+### 💡 Ideas to Build:
+
+- [ ] Create a decentralized game board that lives on universaleverything.io
+- [ ] Build a social trading interface where each grid cell represents a token pair
+- [ ] Design an NFT gallery where each grid cell displays a different collection
+- [ ] Develop a community voting system where grid cells represent proposals
+- [ ] Build a DeFi dashboard where each cell shows different protocol metrics
+
+### 🔑 Technical Integration:
+
+```typescript
+// Example of Universal Profile integration
+import { UniversalProfile, LSP3Profile } from '@lukso/lsp-smart-contracts';
+
+// Get user's Universal Profile data
+const getProfileData = async (address) => {
+  const profile = new UniversalProfile(address);
+  const profileData = await profile.fetchData('LSP3Profile');
+  return profileData;
+};
+
+// Set grid cell ownership as LSP8
+const claimGridCell = async (x, y, profileAddress) => {
+  const tokenId = generateCellTokenId(x, y);
+  await gridContract.mintCell(profileAddress, tokenId);
+};
+```
+
+Deploy your grid dapp to LUKSO testnet and share it on [SpeedRunLUKSO.com](https://speedrunlukso.com)!
 
 ---
 
