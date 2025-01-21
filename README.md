@@ -80,26 +80,6 @@ https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-7-svg-nft
 - [ ] Develop a community voting system where grid cells represent proposals
 - [ ] Build a DeFi dashboard where each cell shows different protocol metrics
 
-### 🔑 Technical Integration:
-
-```typescript
-// Example of Universal Profile integration
-import { UniversalProfile, LSP3Profile } from '@lukso/lsp-smart-contracts';
-
-// Get user's Universal Profile data
-const getProfileData = async (address) => {
-  const profile = new UniversalProfile(address);
-  const profileData = await profile.fetchData('LSP3Profile');
-  return profileData;
-};
-
-// Set grid cell ownership as LSP8
-const claimGridCell = async (x, y, profileAddress) => {
-  const tokenId = generateCellTokenId(x, y);
-  await gridContract.mintCell(profileAddress, tokenId);
-};
-```
-
 Deploy your grid dapp to LUKSO testnet and share it on [SpeedRunLUKSO.com](https://speedrunlukso.com)!
 
 ---
