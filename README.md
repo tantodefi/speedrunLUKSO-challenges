@@ -4,13 +4,13 @@
 
 🦸 A superpower of Ethereum (and LUKSO - because LUKSO is a fork of ethereum and is EVM compatible) is that it allows you, the builder, to create a simple set of rules that an adversarial group of players can use to work together. In this challenge, you create a decentralized application where users can coordinate a group funding effort. If the users cooperate, the money is collected in a second smart contract. If they defect, the worst that can happen is everyone gets their money back. The users only have to trust the code.
 
-🏦 Build a `Staker.sol` contract that collects **LYX** from numerous addresses using a payable `stake()` function and keeps track of `balances`. After some `deadline` if it has at least some `threshold` of ETH, it sends it to an `ExampleExternalContract` and triggers the `complete()` action sending the full balance. If not enough **LYX** is collected, allow users to `withdraw()`.
+🏦 Build a `Staker.sol` contract that collects **LYX** from numerous addresses using a payable `stake()` function and keeps track of `balances`. After some `deadline` if it has at least some `threshold` of **LYX**, it sends it to an `ExampleExternalContract` and triggers the `complete()` action sending the full balance. If not enough **LYX** is collected, allow users to `withdraw()`.
 
 🎛 Building the frontend to display the information and UI is just as important as writing the contract. The goal is to deploy the contract and the app to allow anyone to stake using your app. Use a `Stake(address,uint256)` event to list all stakes.
 
-🌟 The final deliverable is deploying a Dapp that lets users send LYX to a contract and stake if the conditions are met, then `yarn vercel` your app to a public webserver. Submit the url on [TODO]()!
+🌟 The final deliverable is deploying a Dapp that lets users send **LYX** to a contract and stake if the conditions are met, then `yarn vercel` your app to a public webserver. Submit the url on [speedrunlukso.com](https://speedrunlukso.com/submit)!
 
-> 💬 Meet other builders working on this challenge and get help in the [CommonGround]()!
+> 💬 Meet other builders working on this challenge and get help in the [Telegram](https://t.me/+DlLg2q8IeII4Mjhh)!
 
 ---
 
@@ -25,7 +25,7 @@ Before you begin, you need to install the following tools:
 Then download the challenge to your computer and install dependencies by running:
 
 ```sh
-git clone https://github.com/Dev-Rel-as-a-Service/SpeedRunLUKSO/tree/challenge-1-decentralized-staking challenge-1-decentralized-staking
+git clone https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-1-decentralized-staking challenge-1-decentralized-staking
 cd challenge-1-decentralized-staking
 git checkout challenge-1-decentralized-staking
 yarn install
@@ -238,10 +238,10 @@ For production-grade applications, it's recommended to obtain your own API keys 
 
 Run the `yarn verify --network luksoTestnet` command to verify your contracts on LUKSO testnet blockexplorer 🛰
 
-👉 Search this address on LUKSO testnet blockexplorer to get the URL you submit to 🏃‍♀️[TODO]().
+👉 Search this address on LUKSO testnet blockexplorer to get the URL you submit along with your deployed dapp to 🏃‍♀️[speedrunlukso.com](https://speedrunlukso.com/submit).
 
 ---
 
-> 🏃 Head to your next challenge [here](https://github.com/Dev-Rel-as-a-Service/SpeedRunLUKSO).
+> 🏃 Head to your next challenge [here](https://github.com/tantodefi/SpeedRunLUKSO).
 
-> 💬 Problems, questions, comments on the stack? Post them to the [🏗 CommonGround](TODO)
+> 💬 Problems, questions, comments on the stack? Post them to the [🏗 Telegram](https://t.me/+DlLg2q8IeII4Mjhh)
