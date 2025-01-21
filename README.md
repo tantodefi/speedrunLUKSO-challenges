@@ -1,6 +1,101 @@
-# 🚩 Challenge 7: 🎁 SVG NFT
+# 🚩 Challenge 7: 🎨 SVG NFT on LUKSO using LSP8
 
 ![readme-7](https://github.com/scaffold-eth/se-2-challenges/assets/25638585/94178d41-f7ce-4d0f-af9a-488a224d301f)
+
+🎨 Creating on-chain SVG NFTs using LUKSO's LSP8 standard adds exciting new possibilities to generating unique digital art. This challenge will have you build a contract that generates dynamic SVG images directly on the blockchain, leveraging LUKSO's advanced NFT features.
+
+### 🤔 Key Differences: ERC721 vs LSP8 for SVG NFTs
+
+1. **Token Identification**
+   - ERC721: Uses `uint256` for token IDs
+   - LSP8: Uses `bytes32` for token IDs, allowing for more flexible identification schemes
+
+2. **Metadata Handling**
+   - ERC721: Relies on tokenURI pattern returning JSON
+   - LSP8: Uses LSP4 Digital Asset Metadata standard for richer on-chain metadata
+
+3. **Transfer Mechanics**
+   - ERC721: Basic transfer with approval system
+   - LSP8: Enhanced transfers with hooks and data parameters
+
+4. **Interface Support**
+   - ERC721: Basic ERC165 interface detection
+   - LSP8: LSP1 Universal Receiver for advanced contract interactions
+
+### 📝 Contract Changes
+
+We've provided two versions of the collectible contract:
+- `YourCollectible.sol`: Traditional ERC721 implementation
+- `YourLSP8Collectible.sol`: LUKSO LSP8 implementation
+
+Key changes in the LSP8 version:
+```solidity
+// Token ID conversion for SVG NFTs
+function mintItem(address to, string memory tokenURI) public returns (bytes32) {
+    _tokenIds += 1;
+    bytes32 tokenId = bytes32(uint256(_tokenIds));
+    _tokenURIs[tokenId] = tokenURI;
+    _mint(to, tokenId, true, "");
+    return tokenId;
+}
+```
+
+### 🔍 Setting Metadata for SVG NFTs
+
+After deploying your LSP8 SVG NFT contract, set the metadata:
+
+```typescript
+import { ERC725YDataKeys } from '@lukso/lsp-smart-contracts';
+
+// Set collection metadata
+await nftContract.setData(
+    LSP4_METADATA_KEY,
+    encodeMetadata({
+        name: "My SVG Collection",
+        description: "On-chain SVG NFTs on LUKSO",
+        links: [{
+            title: "Collection Website",
+            url: "https://your-website.com"
+        }],
+        images: [{
+            width: 1000,
+            height: 1000,
+            url: "ipfs://your-collection-image-hash",
+        }],
+    })
+);
+
+// Set verified creators
+const creatorAddress = "0x..."; // Your creator address
+await nftContract.setDataBatch(
+    [
+        ERC725YDataKeys.LSP4["LSP4Creators[]"].length,
+        ERC725YDataKeys.LSP4["LSP4Creators[]"].key,
+        ERC725YDataKeys.LSP4.LSP4CreatorsMap + creatorAddress.substring(2)
+    ],
+    [
+        "0x0000000000000000000000000000000000000000000000000000000000000001",
+        "0x" + creatorAddress.substring(2).padStart(64, "0"),
+        "0x" + "00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001"
+    ]
+);
+```
+
+### 🎯 Challenge Goals:
+
+- [ ] Study the differences between ERC721 and LSP8 implementations
+- [ ] Deploy the LSP8 SVG NFT contract to LUKSO testnet
+- [ ] Set proper metadata using LSP4 standard
+- [ ] Generate dynamic SVGs on-chain
+- [ ] Create an interactive minting interface
+- [ ] Test all LSP8-specific features (force transfers, data parameters)
+
+### ⚔️ Side Quests:
+
+- [ ] Add dynamic SVG generation based on token metadata
+- [ ] Implement LSP1 Universal Receiver for enhanced interactions
+- [ ] Create a more complex metadata structure with multiple images and attributes
+- [ ] Add custom transfer hooks using LSP8's data parameter feature
 
 🎨 Creating on-chain SVG NFTs is an exciting way to leverage the power of smart contracts for generating unique digital art. This challenge will have you build a contract that generates dynamic SVG images directly on the blockchain. Users will be able to mint their own unique NFTs with customizable SVG graphics and metadata.
 
