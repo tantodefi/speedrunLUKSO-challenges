@@ -188,7 +188,7 @@ Uncomment the `Buy Tokens` sections in `packages/nextjs/app/token-vendor/page.ts
 
 ### 🥅 Goals
 
-- [ ] When you try to buy tokens from the vendor, you should get an error: **'ERC20: transfer amount exceeds balance'**
+- [ ] When you try to buy tokens from the vendor, you should get an error: **'transfer amount exceeds balance'**
 
 ⚠️ This is because the Vendor contract doesn't have any YourTokens yet!
 
@@ -207,7 +207,7 @@ await yourToken.transfer(
 );
 ```
 
-> 🔎 Look in `packages/nextjs/app/token-vendor/page.tsx` for code to uncomment to display the Vendor ETH and Token balances.
+> 🔎 Look in `packages/nextjs/app/token-vendor/page.tsx` for code to uncomment to display the Vendor LYX and Token balances.
 
 > You can `yarn deploy --reset` to deploy your contract until you get it right.
 
@@ -216,7 +216,7 @@ await yourToken.transfer(
 ### 🥅 Goals
 
 - [ ] Does the `Vendor` address start with a `balanceOf` **1000** in `YourToken` on the `Debug Contracts` tab?
-- [ ] Can you buy **10** tokens for **0.1** ETH?
+- [ ] Can you buy **10** tokens for **0.1** LYX?
 - [ ] Can you transfer tokens to a different account?
 
 > 📝 Edit `Vendor.sol` to inherit _Ownable_.
@@ -235,11 +235,11 @@ await vendor.transferOwnership("**YOUR FRONTEND ADDRESS**");
 
 - [ ] Is your frontend address the `owner` of the `Vendor`?
 
-> 📝 Finally, add a `withdraw()` function in `Vendor.sol` that lets the owner withdraw all the ETH from the vendor contract.
+> 📝 Finally, add a `withdraw()` function in `Vendor.sol` that lets the owner withdraw all the LYX from the vendor contract.
 
 ### 🥅 Goals
 
-- [ ] Can **only** the `owner` withdraw the ETH from the `Vendor`?
+- [ ] Can **only** the `owner` withdraw the LYX from the `Vendor`?
 
 ### ⚔️ Side Quests
 
@@ -251,21 +251,21 @@ await vendor.transferOwnership("**YOUR FRONTEND ADDRESS**");
 
 👩‍🏫 The hardest part of this challenge is to build your `Vendor` to buy the tokens back.
 
-🧐 The reason why this is hard is the `approve()` pattern in ERC20s.
+🧐 The reason why this is hard is the permission pattern needed for token transfers.
 
-😕 First, the user has to call `approve()` on the `YourToken` contract, approving the `Vendor` contract address to take some amount of tokens.
+😕 First, the user has to call `authorizeOperator()` on the `YourLSP7Token` contract, authorizing the `Vendor` contract address to transfer some amount of tokens on their behalf.
 
 🤨 Then, the user makes a _second transaction_ to the `Vendor` contract to `sellTokens(uint256 amount)`.
 
-🤓 The `Vendor` should call `yourToken.transferFrom(msg.sender, address(this), theAmount)` and if the user has approved the `Vendor` correctly, tokens should transfer to the `Vendor` and ETH should be sent to the user.
+🤓 The `Vendor` should call `yourToken.transferFrom(msg.sender, address(this), amount, true, "")` and if the user has properly authorized the `Vendor`, tokens should transfer to the `Vendor` and LYX should be sent to the user.
 
 > 📝 Edit `Vendor.sol` and add a `sellTokens(uint256 amount)` function!
 
-⚠️ You will need extra UI for calling `approve()` before calling `sellTokens(uint256 amount)`.
+⚠️ You will need extra UI for calling `authorizeOperator()` before calling `sellTokens(uint256 amount)`.
 
-🔨 Use the `Debug Contracts` tab to call the approve and sellTokens() at first but then...
+🔨 Use the `Debug Contracts` tab to call the authorizeOperator and sellTokens() at first but then...
 
-🔍 Look in the `packages/nextjs/app/token-vendor/page.tsx` for the extra approve/sell UI to uncomment!
+🔍 Look in the `packages/nextjs/app/token-vendor/page.tsx` for the extra authorize/sell UI to uncomment!
 
 ![VendorBuyBack](./assets/sell.png)
 

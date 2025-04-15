@@ -130,7 +130,7 @@ const TokenVendor: NextPage = () => {
           </div>
         )}
 
-        {/* Sell Tokens */}
+        {/* Sell Tokens - LSP7 uses authorizeOperator instead of approve */}
         {!!yourTokenBalance && (
           <div className="flex flex-col items-center space-y-4 bg-base-100 shadow-lg shadow-secondary border-8 border-secondary rounded-xl p-6 mt-8 w-full max-w-lg">
             <div className="text-xl">Sell tokens</div>
@@ -157,11 +157,11 @@ const TokenVendor: NextPage = () => {
                     });
                     setIsApproved(true);
                   } catch (err) {
-                    console.error("Error calling approve function");
+                    console.error("Error calling authorizeOperator function");
                   }
                 }}
               >
-                Approve Tokens
+                Authorize Tokens
               </button>
 
               <button
