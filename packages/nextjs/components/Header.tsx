@@ -20,11 +20,6 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/",
   },
   {
-    label: "ERC20 Token Vendor",
-    href: "/token-vendor",
-    icon: <CircleStackIcon className="h-4 w-4" />,
-  },
-  {
     label: "LSP7 Token Vendor",
     href: "/token-vendor",
     icon: <CircleStackIcon className="h-4 w-4" />,

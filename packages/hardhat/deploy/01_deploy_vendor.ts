@@ -1,45 +1,38 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-// import { Contract } from "ethers";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-/**
- * Deploys a contract named "Vendor" using the deployer account and
- * constructor arguments set to the deployer address
- *
- * @param hre HardhatRuntimeEnvironment object.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const deployVendor: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  /*
-    On localhost, the deployer account is the one that comes with Hardhat, which is already funded.
+  const { deployments, getNamedAccounts, ethers } = hre;
+  const { deploy } = deployments;
+  const { deployer } = await getNamedAccounts();
 
-    When deploying to live networks (e.g `yarn deploy --network goerli`), the deployer account
-    should have sufficient balance to pay for the gas fees for contract creation.
+  // Get the deployed YourLSP7Token
+  const yourToken = await deployments.get("YourLSP7Token");
+  console.log("YourLSP7Token found at:", yourToken.address);
 
-    You can generate a random account with `yarn generate` which will fill DEPLOYER_PRIVATE_KEY
-    with a random private key in the .env file (then used on hardhat.config.ts)
-    You can run the `yarn account` command to check your balance in every network.
-  */
-  // // Deploy Vendor
-  // const { deployer } = await hre.getNamedAccounts();
-  // const { deploy } = hre.deployments;
-  // const yourToken = await hre.ethers.getContract<Contract>("YourToken", deployer);
-  // const yourTokenAddress = await yourToken.getAddress();
-  // await deploy("Vendor", {
-  //   from: deployer,
-  //   // Contract constructor arguments
-  //   args: [yourTokenAddress],
-  //   log: true,
-  //   // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
-  //   // automatically mining the contract deployment transaction. There is no effect on live networks.
-  //   autoMine: true,
-  // });
-  // const vendor = await hre.ethers.getContract<Contract>("Vendor", deployer);
-  // const vendorAddress = await vendor.getAddress();
-  // // Transfer tokens to Vendor
-  // await yourToken.transfer(vendorAddress, hre.ethers.parseEther("1000"));
-  // // Transfer contract ownership to your frontend address
-  // await vendor.transferOwnership("**YOUR FRONTEND ADDRESS**");
+  // Deploy the Vendor contract
+  console.log("Deploying Vendor with the account:", deployer);
+  const vendor = await deploy("Vendor", {
+    from: deployer,
+    args: [yourToken.address], // Pass the token address to the constructor
+    log: true,
+    autoMine: true,
+  });
+
+  console.log("Vendor deployed to:", vendor.address);
+
+  // Transfer tokens to the Vendor
+  console.log("Transferring tokens to the Vendor...");
+  
+  const tokenContract = await ethers.getContractAt("YourLSP7Token", yourToken.address);
+  const vendorContract = await ethers.getContractAt("Vendor", vendor.address);
+  
+  // Transfer 100 tokens to the vendor
+  const transferAmount = ethers.parseUnits("100", 18);
+  await tokenContract.transfer(deployer, vendor.address, transferAmount, true, "0x");
+  
+  const vendorBalance = await tokenContract.balanceOf(vendor.address);
+  console.log("Vendor token balance:", ethers.formatUnits(vendorBalance, 18));
 };
 
 export default deployVendor;
@@ -47,3 +40,4 @@ export default deployVendor;
 // Tags are useful if you have multiple deploy files and only want to run one of them.
 // e.g. yarn deploy --tags Vendor
 deployVendor.tags = ["Vendor"];
+deployVendor.dependencies = ["YourLSP7Token"];

@@ -21,15 +21,15 @@ const Home: NextPage = () => {
             <p className="text-center text-lg mt-8">
               🤖 Smart contracts are kind of like &quot;always on&quot; vending machines that anyone can access.
               Let&apos;s make a decentralized, digital currency. Then, let&apos;s build an unstoppable vending machine
-              that will buy and sell the currency. We&apos;ll learn about the &quot;approve&quot; pattern for ERC20s and
+              that will buy and sell the currency. We&apos;ll learn about LUKSO's new fungible token standard LSP7s and
               how contract to contract interactions work.
             </p>
             <p className="text-center text-lg">
-              🌟 The final deliverable is an app that lets users purchase your ERC20 token, transfer it, and sell it
+              🌟 The final deliverable is an app that lets users purchase your lsp7 token, transfer it, and sell it
               back to the vendor. Deploy your contracts on your public chain of choice and then deploy your app to a
               public webserver. Submit the url on{" "}
-              <a href="https://speedrunethereum.com/" target="_blank" rel="noreferrer" className="underline">
-                SpeedRunEthereum.com
+              <a href="https://speedrunluksocom/" target="_blank" rel="noreferrer" className="underline">
+                SpeedRunLUKSO.com
               </a>{" "}
               !
             </p>
