@@ -8,7 +8,7 @@ import { Contract } from "ethers";
  *
  * @param hre HardhatRuntimeEnvironment object.
  */
-const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const deployYourLSP8Collectible: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   /*
     On localhost, the deployer account is the one that comes with Hardhat, which is already funded.
 
@@ -22,7 +22,7 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
 
-  await deploy("YourCollectible", {
+  await deploy("YourLSP8Collectible", {
     from: deployer,
     // Contract constructor arguments
     args: [],
@@ -33,11 +33,11 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
   });
 
   // Get the deployed contract to interact with it after deploying.
-  const yourCollectible = await hre.ethers.getContract<Contract>("YourCollectible", deployer);
+  const yourCollectible = await hre.ethers.getContract<Contract>("YourLSP8Collectible", deployer);
 };
 
-export default deployYourContract;
+export default deployYourLSP8Collectible;
 
 // Tags are useful if you have multiple deploy files and only want to run one of them.
 // e.g. yarn deploy --tags YourContract
-deployYourContract.tags = ["YourCollectible"];
+deployYourLSP8Collectible.tags = ["YourLSP8Collectible"];

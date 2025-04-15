@@ -6,13 +6,13 @@
 
 🧑‍🏫 If you would like a more gentle introduction for developers, watch our 15 video [🎥 Web2 to Web3](https://www.youtube.com/playlist?list=PLJz1HruEnenAf80uOfDwBPqaliJkjKg69) series.
 
-📄 If you get get stuck make sure to consult the [LUKSO DOCS](https://docs.lukso.tech/)
+📄 If you get stuck make sure to consult the [LUKSO DOCS](https://docs.lukso.tech/)
 
 ---
 
 🎫 Create a simple NFT using LSP8 on LUKSO:
 
-👷‍♀️ You'll compile and deploy your first LSP8 smart contract learning the differences between an LSP8 (new NFT standard) and an ERC721 (old standard). Then, you'll use a template React app full of important Ethereum components and hooks. Finally, you'll deploy an NFT to the public LUKSO testnet network to share with friends! 🚀
+👷‍♀️ You'll compile and deploy your first LSP8 smart contract using hardhat. Then, you'll use a template React app full of important web3 components and hooks. Finally, you'll deploy an NFT to the public LUKSO testnet network to share with friends! 🚀
 
 🌟 The final deliverable is an app that lets users purchase and transfer NFTs. Deploy your contracts to LUKSO testnet, then build and upload your app to a public web server. Submit the url on [speedrunlukso.com](https://speedrunlukso.com/sbmit)!
 
