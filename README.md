@@ -16,7 +16,7 @@ https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-0-simple-nft
 
 ## 🚩 Challenge 1: 🔏 Decentralized Staking App with LYX
 
-🦸 A superpower of Ethereum is allowing you, the builder, to create a simple set of rules that an adversarial group of players can use to work together. In this challenge, you create a decentralized application where users can coordinate a group funding effort. If the users cooperate, the money is collected in a second smart contract. If they defect, the worst that can happen is everyone gets their money back. The users only have to trust the code.
+🦸 A superpower of LUKSO is allowing you, the builder, to create a simple set of rules that an adversarial group of players can use to work together. In this challenge, you create a decentralized application where users can coordinate a group funding effort. If the users cooperate, the money is collected in a second smart contract. If they defect, the worst that can happen is everyone gets their money back. The users only have to trust the code.
 
 https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-1-decentralized-staking
 
@@ -24,7 +24,7 @@ https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-1-decentralized-stakin
 
 ## 🚩 Challenge 2: 🏵 Token Vendor with LSP7
 
-🤖 Smart contracts are kind of like "always on" vending machines that anyone can access. Let's make a decentralized, digital currency. Then, let's build an unstoppable vending machine that will buy and sell the currency. We'll learn about the "approve" pattern for ERC20s and how contract to contract interactions work.
+🤖 Smart contracts are kind of like "always on" vending machines that anyone can access. Let's make a decentralized, digital currency. Then, let's build an unstoppable vending machine that will buy and sell the currency. We'll learn about the new LSP7 token contract standard and how contract to contract interactions work.
 
 https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-2-token-vendor
 
@@ -34,7 +34,7 @@ https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-2-token-vendor
 
 🎰 Randomness is tricky on a public deterministic blockchain. In this challenge you will explore creating random numbers using block hash and how that may be exploitable. Attack the dice game with your own contract by predicting the randomness ahead of time to always roll a winner!
 
-https://github.com/tantodefi/SpeedRunLUKSO)/tree/challenge-3-dice-game
+https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-3-dice-game
 
 ---
 
@@ -48,29 +48,13 @@ https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-7-svg-nft
 
 ## 🚩 Challenge 5: 🔗 Grid Dapp Challenge
 
-🌐 Create an interactive grid application on LUKSO that leverages Universal Profiles for enhanced user interaction and ownership. This challenge introduces you to building decentralized social experiences using LUKSO's powerful standards.
+🌐 Create a grid mini-app from one of the previous challenges builds using the @lukso/up-provider package and host the grid app on Universal Everything profile. The goal here is to get one of the previous starter builds live as a grid mini-app, be creative and maybe even ship them to mainnet!
 
-### Why Build on LUKSO with Universal Profiles?
+- [ ] basic LSP8 nft example
+- [ ] basic LSP7 token vending machine
+- [ ] basic staking machine
 
-1. **Enhanced User Identity**
-   - Universal Profiles provide rich user identities with built-in metadata
-   - Users can interact with your grid using their established digital identity
-   - Profile pictures, usernames, and social links are readily available
-
-2. **Native Social Features**
-   - LSP2 Schema allows for standardized social connections
-   - Build follower/following systems using Universal Profile relationships
-   - Create social interactions that persist across different dapps
-
-3. **Improved Asset Ownership**
-   - Grid cells can be owned as LSP8 NFTs
-   - Universal Profiles can hold and manage multiple digital assets
-   - Seamless integration with LUKSO's digital asset standards
-
-4. **Cross-Platform Compatibility**
-   - Grid data and ownership is accessible across any LUKSO dapp
-   - Universal Profiles work as single sign-on for your application
-   - Build features that integrate with other LUKSO applications
+## 🚩 Challenge 6: 🔗 Build your own Grid Dapp Challenge
 
 ### 💡 Ideas to Build:
 
@@ -80,7 +64,7 @@ https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-7-svg-nft
 - [ ] Develop a community voting system where grid cells represent proposals
 - [ ] Build a DeFi dashboard where each cell shows different protocol metrics
 
-Deploy your grid dapp to LUKSO testnet and share it on [SpeedRunLUKSO.com](https://speedrunlukso.com)!
+Deploy your grid dapp to LUKSO testnet or mainnet and share it on [SpeedRunLUKSO.com](https://speedrunlukso.com)!
 
 ---
 
