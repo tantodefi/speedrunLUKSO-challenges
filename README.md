@@ -79,11 +79,11 @@ uint256 public constant threshold = 1 ether;
 
 > 👩‍💻 Write your `stake()` function and test it with the `Debug Contracts` tab in the frontend.
 
-![debugContracts](https://github.com/scaffold-eth/se-2-challenges/assets/55535804/1a888e31-a79b-49ef-9848-357c5cee445a)
+![debugContracts](./assets/debugger.png)
 
 > 💸 Need more funds from the faucet? Click on _"Grab funds from faucet"_, or use the Faucet feature at the bottom left of the page to get as much as you need!
 
-![Faucet](https://github.com/scaffold-eth/se-2-challenges/assets/55535804/e82e3100-20fb-4886-a6bf-4113c3729f53)
+![Faucet](./assets/faucet.png)
 
 > ✏ Need to troubleshoot your code? If you import `hardhat/console.sol` to your contract, you can call `console.log()` right in your Solidity code. The output will appear in your `yarn chain` terminal.
 
@@ -93,7 +93,7 @@ uint256 public constant threshold = 1 ether;
 - [ ] Is your `balance` correctly tracked?
 - [ ] Do you see the events in the `Stake Events` tab?
 
-  ![allStakings](https://github.com/scaffold-eth/se-2-challenges/assets/55535804/80bcc843-034c-4547-8535-129ed494a204)
+  ![allStakings](./assets/stake-events.png)
 
 ---
 
@@ -129,7 +129,7 @@ You'll have 30 seconds after deploying until the deadline is reached, you can ad
 
 ⏳ _"Time Left"_ will only update if a transaction occurs. You can see the time update by getting funds from the faucet button in navbar just to trigger a new block.
 
-![stakerUI](https://github.com/scaffold-eth/se-2-challenges/assets/55535804/7d85badb-3ea3-4f3c-b5f8-43d5b64f6714)
+![stakerUI](./assets/staker-ui.png)
 
 > 👩‍💻 You can call `yarn deploy --reset` any time you want a fresh contract, it will get re-deployed even if there are no changes on it.  
 > You may need it when you want to reload the _"Time Left"_ of your tests.
@@ -148,7 +148,7 @@ Your `Staker UI` tab should be almost done and working at this point.
 
 ## Checkpoint 3: 💵 Receive Function / UX 🙎
 
-🎀 To improve the user experience, set your contract up so it accepts ETH sent to it and calls `stake()`. You will use what is called the `receive()` function.
+🎀 To improve the user experience, set your contract up so it accepts LYX sent to it and calls `stake()`. You will use what is called the `receive()` function.
 
 > Use the [receive()](https://docs.soliditylang.org/en/v0.8.9/contracts.html?highlight=receive#receive-ether-function) function in solidity to "catch" ETH sent to the contract and call `stake()` to update `balances`.
 
@@ -156,7 +156,7 @@ Your `Staker UI` tab should be almost done and working at this point.
 
 ### 🥅 Goals
 
-- [ ] If you send ETH directly to the contract address does it update your `balance` and the `balance` of the contract?
+- [ ] If you send LYX directly to the contract address does it update your `balance` and the `balance` of the contract?
 
 ---
 
