@@ -82,7 +82,7 @@ yarn start
 
 > 👨🏻‍🚒 When you close the incognito window, the account is gone forever. Burner wallets are great for local development but you'll move to more permanent wallets when you interact with public networks.
 
-> 🆙 In fact while burner wallets and 'externally owned accounts' (EOA's) will still work on LUKSO - one of the powerful new primitives that you will learn about are called [Universal Profiles](https://docs.lukso.tech/install-up-browser-extension/). Universal Profiles or 'UP's' are powerful smart contract accounts that support advanced interfaces and features for account abstraction. We will get more familiar with UP's and their benefits and new features later on.
+> 🆙 In fact while burner wallets and externally owned accounts (EOA wallets like metamask) will still work on LUKSO - one of the powerful new primitives that you will learn about are called [Universal Profiles](https://docs.lukso.tech/install-up-browser-extension/). Universal Profiles or 'UP's' are powerful smart contract accounts that support advanced interfaces and features for account abstraction. We will get more familiar with UP's and their benefits and new features later on.
 
 ---
 
