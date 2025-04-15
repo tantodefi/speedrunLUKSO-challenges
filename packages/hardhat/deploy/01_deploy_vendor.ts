@@ -29,6 +29,8 @@ const deployVendor: DeployFunction = async function (hre: HardhatRuntimeEnvironm
   
   // Transfer 100 tokens to the vendor
   const transferAmount = ethers.parseUnits("100", 18);
+  
+  // Use the correct transfer parameters for LSP7
   await tokenContract.transfer(deployer, vendor.address, transferAmount, true, "0x");
   
   const vendorBalance = await tokenContract.balanceOf(vendor.address);

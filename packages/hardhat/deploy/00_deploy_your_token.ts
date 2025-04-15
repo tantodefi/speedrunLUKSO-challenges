@@ -3,7 +3,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 // import { Contract } from "ethers";
 
 /**
- * Deploys a contract named "YourToken" using the deployer account and
+ * Deploys a contract named "YourLSP7Token" using the deployer account and
  * constructor arguments set to the deployer address
  *
  * @param hre HardhatRuntimeEnvironment object.
@@ -25,11 +25,11 @@ const deployYourToken: DeployFunction = async function (hre: HardhatRuntimeEnvir
   console.log("YourLSP7Token deployed to:", yourToken.address);
 
   // Get the deployed contract
-  // const yourToken = await hre.ethers.getContract<Contract>("YourToken", deployer);
+  // const yourToken = await hre.ethers.getContract<Contract>("YourLSP7Token", deployer);
 };
 
 export default deployYourToken;
 
 // Tags are useful if you have multiple deploy files and only want to run one of them.
-// e.g. yarn deploy --tags YourToken
+// e.g. yarn deploy --tags YourLSP7Token
 deployYourToken.tags = ["YourLSP7Token"];

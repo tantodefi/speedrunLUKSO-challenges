@@ -18,22 +18,22 @@ const TokenVendor: NextPage = () => {
 
   const { address } = useAccount();
   const { data: yourTokenSymbol } = useScaffoldReadContract({
-    contractName: "YourToken",
+    contractName: "YourLSP7Token",
     functionName: "symbol",
   });
 
   const { data: yourTokenBalance } = useScaffoldReadContract({
-    contractName: "YourToken",
+    contractName: "YourLSP7Token",
     functionName: "balanceOf",
     args: [address],
   });
 
   const { data: vendorContractData } = useDeployedContractInfo("Vendor");
   const { writeContractAsync: writeVendorAsync } = useScaffoldWriteContract("Vendor");
-  const { writeContractAsync: writeYourTokenAsync } = useScaffoldWriteContract("YourToken");
+  const { writeContractAsync: writeYourTokenAsync } = useScaffoldWriteContract("YourLSP7Token");
 
   // const { data: vendorTokenBalance } = useScaffoldReadContract({
-  //   contractName: "YourToken",
+  //   contractName: "YourLSP7Token",
   //   functionName: "balanceOf",
   //   args: [vendorContractData?.address],
   // });
@@ -118,7 +118,7 @@ const TokenVendor: NextPage = () => {
                 try {
                   await writeYourTokenAsync({
                     functionName: "transfer",
-                    args: [toAddress, multiplyTo1e18(tokensToSend)],
+                    args: [address, toAddress, multiplyTo1e18(tokensToSend), true, "0x"],
                   });
                 } catch (err) {
                   console.error("Error calling transfer function");
@@ -152,7 +152,7 @@ const TokenVendor: NextPage = () => {
                 onClick={async () => {
                   try {
                     await writeYourTokenAsync({
-                      functionName: "approve",
+                      functionName: "authorizeOperator",
                       args: [vendorContractData?.address, multiplyTo1e18(tokensToSell)],
                     });
                     setIsApproved(true);
