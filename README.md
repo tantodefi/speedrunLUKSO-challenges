@@ -74,7 +74,7 @@ yarn start
 - [ ] Can you check the `balanceOf()` your frontend address in the `Debug Contracts` tab? (**YourToken** contract)
 - [ ] Can you `transfer()` your token to another account and check _that_ account's `balanceOf`?
 
-![debugContractsYourToken](https://github.com/scaffold-eth/se-2-challenges/assets/55535804/5fb4daeb-5d05-4522-96b3-76f052a68418)
+![debugContractsYourToken](./assets/debug.png)
 
 > 💬 Hint: Use an incognito window to create a new address and try sending to that new address. Can use the `transfer()` function in the `Debug Contracts` tab.
 
@@ -211,7 +211,7 @@ await yourToken.transfer(
 
 > You can `yarn deploy --reset` to deploy your contract until you get it right.
 
-![TokenVendorBuy](https://github.com/scaffold-eth/se-2-challenges/assets/55535804/7669cc68-e942-4630-95c8-91cd21af5ba0)
+![TokenVendorBuy](./assets/token-vendor.png)
 
 ### 🥅 Goals
 
@@ -267,7 +267,7 @@ await vendor.transferOwnership("**YOUR FRONTEND ADDRESS**");
 
 🔍 Look in the `packages/nextjs/app/token-vendor/page.tsx` for the extra approve/sell UI to uncomment!
 
-![VendorBuyBack](https://github.com/scaffold-eth/se-2-challenges/assets/55535804/99063aaa-368d-4156-997d-08dff99af11b)
+![VendorBuyBack](./assets/sell.png)
 
 ### 🥅 Goal
 
@@ -279,7 +279,7 @@ await vendor.transferOwnership("**YOUR FRONTEND ADDRESS**");
 - [ ] Should we disable the `owner` withdraw to keep liquidity in the `Vendor`?
 - [ ] It would be a good idea to display Sell Token Events. Create an **event** `SellTokens(address seller, uint256  amountOfTokens, uint256 amountOfETH)` and `emit` it in your `Vendor.sol` and uncomment `SellTokens Events` section in your `packages/nextjs/app/events/page.tsx` to update your frontend.
 
-  ![Events](https://github.com/scaffold-eth/se-2-challenges/assets/55535804/662c96b5-d53f-4efa-af4a-d3106bfd47f0)
+  ![Events](./assets/events.png)
 
 ### ⚠️ Test it!
 
