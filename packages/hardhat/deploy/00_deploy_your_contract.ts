@@ -1,6 +1,5 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import { Contract } from "ethers";
 
 /**
  * Deploys a contract named "YourContract" using the deployer account and
@@ -8,7 +7,7 @@ import { Contract } from "ethers";
  *
  * @param hre HardhatRuntimeEnvironment object.
  */
-const deployYourLSP8Collectible: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const deployYourLSP8Collectible: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
   /*
     On localhost, the deployer account is the one that comes with Hardhat, which is already funded.
 
@@ -31,9 +30,6 @@ const deployYourLSP8Collectible: DeployFunction = async function (hre: HardhatRu
     // automatically mining the contract deployment transaction. There is no effect on live networks.
     autoMine: true,
   });
-
-  // Get the deployed contract to interact with it after deploying.
-  const yourCollectible = await hre.ethers.getContract<Contract>("YourLSP8Collectible", deployer);
 };
 
 export default deployYourLSP8Collectible;
