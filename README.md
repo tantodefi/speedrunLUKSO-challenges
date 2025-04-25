@@ -53,6 +53,7 @@ https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-7-svg-nft
 - [ ] basic LSP8 nft example
 - [ ] basic LSP7 token vending machine
 - [ ] basic staking machine
+- [ ] basic svg nft LSP8 example
 
 ## 🚩 Challenge 6: 🔗 Build your own Grid Dapp Challenge
 
