@@ -5,11 +5,11 @@ const Home: NextPage = () => {
     <div className="flex items-center flex-col flex-grow pt-10">
       <div className="px-5">
         <h1 className="text-center mb-8">
-          <span className="block text-2xl mb-2">SpeedRunEthereum</span>
-          <span className="block text-4xl font-bold">Challenge #X: Challenge Title </span>
+          <span className="block text-2xl mb-2">SpeedRunLUKSO</span>
+          <span className="block text-4xl font-bold">Challenge #5: Grid Mini Dapp Challenge </span>
         </h1>
         <p className="text-center text-lg">
-          Get started by editing{" "}
+          Get started building your lukso mini dapp by editing{" "}
           <code className="italic bg-base-300 text-base font-bold">packages/nextjs/page/app.tsx</code>
         </p>
         <p className="text-center text-lg">
