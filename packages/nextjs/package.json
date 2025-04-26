@@ -13,6 +13,7 @@
     "vercel": "vercel"
   },
   "dependencies": {
+    "@erc725/erc725.js": "^0.27.2",
     "@heroicons/react": "^2.0.11",
     "@lukso/up-provider": "^0.3.5",
     "@rainbow-me/rainbowkit": "^2.0.2",

@@ -70,22 +70,60 @@ export function UpProvider({ children }: UpProviderProps) {
   // Only initialize UP provider on client
   useEffect(() => {
     if (typeof window !== "undefined") {
-      try {
-        const up = createClientUPProvider();
-        setProvider(up);
-
-        up.on("accountsChanged", (accounts: Array<`0x${string}`>) => {
-          setAccounts(accounts);
-          setWalletConnected(accounts.length > 0);
-        });
-
-        up.on("chainChanged", (chainId: number) => {
-          setChainId(chainId);
-        });
-      } catch (e) {
-        console.warn("No UP found. Continuing without a Universal Profile provider.");
-        setProvider(null);
+      // Provider detection logging
+      console.log("[LuksoProvider] window.lukso:", window.lukso);
+      console.log("[LuksoProvider] window.ethereum:", window.ethereum);
+      const up = createClientUPProvider();
+      setProvider(up);
+      if (window.lukso) {
+        console.log("[LuksoProvider] Universal Profile provider detected.");
+      } else if (window.ethereum) {
+        console.log("[LuksoProvider] Standard EVM provider detected (MetaMask, WalletConnect, etc).");
+      } else {
+        console.log("[LuksoProvider] No provider detected in window.");
       }
+
+      try {
+        const allowed = up.allowedAccounts || [];
+        setAccounts(allowed);
+        const context = up.contextAccounts || [];
+        setContextAccounts(context);
+        if (context.length > 0) {
+          console.log("[LuksoProvider] Initial grid owner (context account):", context[0]);
+        } else {
+          console.log("[LuksoProvider] No initial context accounts (no grid owner)");
+        }
+        setWalletConnected(allowed.length > 0 && context.length > 0);
+      } catch (e) {
+        console.error("[LuksoProvider] Error initializing accounts/contextAccounts:", e);
+      }
+
+      const accountsChanged = (_accounts: Array<`0x${string}`>) => {
+        setAccounts(_accounts);
+        setWalletConnected(_accounts.length > 0 && (up.contextAccounts?.length ?? 0) > 0);
+        console.log("[LuksoProvider] accountsChanged:", _accounts);
+      };
+      const contextAccountsChanged = (_contextAccounts: Array<`0x${string}`>) => {
+        setContextAccounts(_contextAccounts);
+        setWalletConnected((up.allowedAccounts?.length ?? 0) > 0 && _contextAccounts.length > 0);
+        if (_contextAccounts.length > 0) {
+          console.log("[LuksoProvider] contextAccountsChanged, grid owner:", _contextAccounts[0]);
+        } else {
+          console.log("[LuksoProvider] contextAccountsChanged, no grid owner");
+        }
+      };
+      const chainChanged = (_chainId: number) => {
+        setChainId(_chainId);
+        console.log("[LuksoProvider] chainChanged:", _chainId);
+      };
+      up.on("accountsChanged", accountsChanged);
+      up.on("contextAccountsChanged", contextAccountsChanged);
+      up.on("chainChanged", chainChanged);
+      return () => {
+        up.removeListener("accountsChanged", accountsChanged);
+        up.removeListener("contextAccountsChanged", contextAccountsChanged);
+        up.removeListener("chainChanged", chainChanged);
+      };
     }
   }, []);
 
