@@ -168,7 +168,21 @@ you can see that once we connect we have access to another account which we can 
 
 ![alt text](grid-owner-1.png)
 
+so from here - you can basically take on eof the previous challenges examples and make it into a grid mini dapp. 
 
+🌐 Create a grid mini-app from one of the previous challenges builds using the @lukso/up-provider package and host the grid app on Universal Everything profile. The goal here is to get one of the previous starter builds live as a grid mini-app, be creative and maybe even ship them to mainnet!
+
+- [ ] basic LSP8 nft example
+- [ ] basic LSP7 token vending machine
+- [ ] basic staking machine
+- [ ] basic svg nft LSP8 example
+
+Don't be scared to add more features to these basic examples making them even more interesting mini dapps!
+
+think about how to make interesting new UI's based on dapps whose when are loaded in the context of a grid maybe render differently - a great example of this is the official mini dapp example starter repo form the 
+LUKSO team https://github.com/lukso-network/miniapp-nextjs-template
+
+alternatively you can also build a new dapp from scratch - and search for ideas/code/inspiration on https://app.buidlguidl.com/builds
 
 ---
 
