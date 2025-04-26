@@ -1,10 +1,10 @@
-# 🚩 Challenge #5: 🖼️ Grid Mini Dapp Challenge
+# 🚩 Challenge 6: 🖼️ Grid Mini Dapp Advanced Challenge
 
 {challengeHeroImage}
 
-In this challenge we're going to learn about how to make a LUKSO Grid Mini Dapp. The lukso grid is a new feature of Universal Profiles. It's technically a list of urls that is stored in the profiles metadata and sites like https://universaleverything.io/ open these urls in iframes and display them - with the added benefit of being able to pass additional web3 context betweeen the users (ie: the grid owner vs. the logged in UP user on universaleverything.io). This aditional context is given when we wrap our nextjs applicatio with an `UPProvider` component which we can get and initialize from the `up-provider` npm package https://www.npmjs.com/package/@lukso/up-provider
+In the last challenge we learnt all about the grid mini dapp and how to use the up-provider. In this challenge we're going to continue on that theme and make a new grid mini dapp.
 
-🌟 The final deliverable is an app that works with LUKSO Universla Profiles and uses the up-provider to make it a grid mini app. We encourage you building something completely new with the new additional contexts accounts available to the dapp. If your struggling for ideas, then you can convert one of the previous challenge examples into a grid mini dapp. Be creative and your own creatie spin to them and mayeb even take them to mainnet!
+🌟 The final deliverable is an app that works with LUKSO Universal Profiles and uses the up-provider to make it a grid mini app. We encourage you building something completely new with the new additional contexts accounts available to the dapp. If your struggling for ideas,you can find some inspiration here https://app.buidlguidl.com/builds. Be creative and your own creatie spin to them and maybe even take them to mainnet!
 Deploy your contracts to a testnet then build and upload your app to a public web server. Submit the url on [SpeedRunLUKSO.com](https://speedrunlukso.com)!
 
 💬 Meet other builders working on this challenge and get help in the {LuksoBuildersTelegramLink}
@@ -56,99 +56,7 @@ yarn start
 
 ---
 
-## Checkpoint 1: 🆙 Add the UPProvider 🖼️
-
-### Integrating @lukso/up-provider (Checkpoint 1)
-
-Follow these steps to add Universal Profiles support to your Next.js app using the [@lukso/up-provider](https://www.npmjs.com/package/@lukso/up-provider):
-
-1. **Install the up-provider package**
-   ```sh
-   npm install @lukso/up-provider --legacy-peer-deps
-   ```
-
-2. **Create a UpProvider component** in `packages/nextjs/components/UpProvider.tsx`:
-   ```tsx
-   import React, { createContext, useEffect, useState, ReactNode } from "react";
-   import { UPProvider as LuksoUPProvider } from "@lukso/up-provider";
-
-   export const UPContext = createContext({
-     contextAccounts: [] as string[],
-     mainAccount: "",
-   });
-
-   interface UpProviderProps {
-     children: ReactNode;
-   }
-
-   export const UpProvider: React.FC<UpProviderProps> = ({ children }) => {
-     const [contextAccounts, setContextAccounts] = useState<string[]>([]);
-     const [mainAccount, setMainAccount] = useState<string>("");
-
-     useEffect(() => {
-       const up = new LuksoUPProvider();
-       up.on("accountsChanged", (accounts: string[]) => {
-         console.log("[UpProvider] Context accounts changed:", accounts);
-         setContextAccounts(accounts);
-       });
-       up.on("mainAccountChanged", (account: string) => {
-         console.log("[UpProvider] Main account changed:", account);
-         setMainAccount(account);
-       });
-       up.getAccounts().then((accounts: string[]) => {
-         console.log("[UpProvider] Initial context accounts:", accounts);
-         setContextAccounts(accounts);
-       });
-       up.getMainAccount().then((account: string) => {
-         console.log("[UpProvider] Initial main account:", account);
-         setMainAccount(account);
-       });
-       return () => {
-         up.removeAllListeners();
-       };
-     }, []);
-
-     return (
-       <UPContext.Provider value={{ contextAccounts, mainAccount }}>
-         {children}
-       </UPContext.Provider>
-     );
-   };
-   ```
-
-3. **Wrap your app with UpProvider** in `packages/nextjs/components/ScaffoldEthAppWithProviders.tsx`:
-   ```tsx
-   import { UpProvider } from "./UpProvider";
-   // ...
-   return (
-     <UpProvider>
-       {/* other providers */}
-       <WagmiProvider config={wagmiConfig}>
-         <QueryClientProvider client={queryClient}>
-           <ProgressBar />
-           <RainbowKitProvider /* ... */>
-             <ScaffoldEthApp>{children}</ScaffoldEthApp>
-           </RainbowKitProvider>
-         </QueryClientProvider>
-       </WagmiProvider>
-     </UpProvider>
-   );
-   ```
-
-4. **Consume UP accounts anywhere in your app:**
-   ```tsx
-   import { useContext } from "react";
-   import { UPContext } from "./UpProvider";
-   const { contextAccounts, mainAccount } = useContext(UPContext);
-   ```
-
-- The `UpProvider` component logs all account changes to the console and updates context state.
-- If you have dependency conflicts, use `--legacy-peer-deps` during installation.
-- Make sure all children that need UP accounts are wrapped by the `UpProvider`.
-
----
-
-## Checkpoint 2: 💾 Build your own grid mini dapp 🖼️
+## Checkpoint 1: 💾 Build your own grid mini dapp 🖼️
 
 Start up the local frontend by running:
 
@@ -167,17 +75,6 @@ here we're showing you an example of how we're detecting a grid owner from the c
 you can see that once we connect we have access to another account which we can use for transactions 
 
 ![alt text](grid-owner-1.png)
-
-so from here - you can basically take on eof the previous challenges examples and make it into a grid mini dapp. 
-
-🌐 Create a grid mini-app from one of the previous challenges builds using the @lukso/up-provider package and host the grid app on Universal Everything profile. The goal here is to get one of the previous starter builds live as a grid mini-app, be creative and maybe even ship them to mainnet!
-
-- [ ] basic LSP8 nft example
-- [ ] basic LSP7 token vending machine
-- [ ] basic staking machine
-- [ ] basic svg nft LSP8 example
-
-Don't be scared to add more features to these basic examples making them even more interesting mini dapps!
 
 think about how to make interesting new UI's based on dapps whose when are loaded in the context of a grid maybe render differently - a great example of this is the official mini dapp example starter repo form the 
 LUKSO team https://github.com/lukso-network/miniapp-nextjs-template
