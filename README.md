@@ -2,7 +2,7 @@
 
 {challengeHeroImage}
 
-A in this challenge we're going to learn about how to make a LUKSO Grid Mini Dapp. The lukso grid is a new feature of Universal Profiles. It's technically a list of urls that is stored in the profiles metadata and sites like https://universaleverything.io/ open these urls in iframes and display them - with the added benefit of being able to pass additional web3 context betweeen the users (ie: the grid owner vs. the logged in UP user on universaleverything.io). This aditional context is given when we wrap our nextjs applicatio with an `UPProvider` component which we can get and initialize from the `up-provider` npm package https://www.npmjs.com/package/@lukso/up-provider
+In this challenge we're going to learn about how to make a LUKSO Grid Mini Dapp. The lukso grid is a new feature of Universal Profiles. It's technically a list of urls that is stored in the profiles metadata and sites like https://universaleverything.io/ open these urls in iframes and display them - with the added benefit of being able to pass additional web3 context betweeen the users (ie: the grid owner vs. the logged in UP user on universaleverything.io). This aditional context is given when we wrap our nextjs applicatio with an `UPProvider` component which we can get and initialize from the `up-provider` npm package https://www.npmjs.com/package/@lukso/up-provider
 
 🌟 The final deliverable is an app that works with LUKSO Universla Profiles and uses the up-provider to make it a grid mini app. We encourage you building something completely new with the new additional contexts accounts available to the dapp. If your struggling for ideas, then you can convert one of the previous challenge examples into a grid mini dapp. Be creative and your own creatie spin to them and mayeb even take them to mainnet!
 Deploy your contracts to a testnet then build and upload your app to a public web server. Submit the url on [SpeedRunLUKSO.com](https://speedrunlukso.com)!
@@ -148,15 +148,65 @@ Follow these steps to add Universal Profiles support to your Next.js app using t
 
 ---
 
-
-
-_Other commonly used Checkpoints (check one Challenge and adapt the texts for your own):_
-
 ## Checkpoint 2: 💾 Build your own grid mini dapp 🖼️
+
+Start up the local frontend by running:
+
+```sh
+yarn run start
+```
+
+Add the localhost:3000 url to your grid on https://universaleverything.io/
+
+you should see the homepage of our se2 dapp open with a button to connect your UP in the top left corner of the grid
+
+![alt text](grid-owner.png)
+
+here we're showing you an example of how we're detecting a grid owner from the contextaccounts
+
+you can see that once we connect we have access to another account which we can use for transactions 
+
+![alt text](grid-owner-1.png)
+
+
+
+---
 
 ## Checkpoint 3: 🚢 Ship your frontend! 🚁
 
+✏️ Edit your frontend config in packages/nextjs/scaffold.config.ts to change the targetNetwork to chains.luksoTestnet.
+
+💻 View your frontend at http://localhost:3000/ and verify you see the correct network.
+
+📡 When you are ready to ship the frontend app...
+
+📦 Run yarn vercel to package up your frontend and deploy.
+
+Follow the steps to deploy to Vercel. Once you log in (email, github, etc), the default options should work. It'll give you a public URL.
+
+If you want to redeploy to the same production URL you can run yarn vercel --prod. If you omit the --prod flag it will deploy it to a preview/test URL.
+
+🦊 Since we have deployed to a public testnet, you will now need to connect using a wallet you own or use a burner wallet. By default 🔥 burner wallets are only available on hardhat . You can enable them on every chain by setting onlyLocalBurnerWallet: false in your frontend config (scaffold.config.ts in packages/nextjs/)
+
+Configuration of Third-Party Services for Production-Grade Apps.
+By default, 🏗 Scaffold-ETH 2 provides predefined API keys for popular services such as Alchemy and Etherscan. This allows you to begin developing and testing your applications more easily, avoiding the need to register for these services.
+This is great to complete your SpeedRunLUKSO.
+
+For production-grade applications, it's recommended to obtain your own API keys (to prevent rate limiting issues). You can configure these at:
+
+🔷ALCHEMY_API_KEY variable in packages/hardhat/.env and packages/nextjs/.env.local. You can create API keys from the Alchemy dashboard.
+
+📃ETHERSCAN_API_KEY variable in packages/hardhat/.env with your generated API key. You can get your key here.
+
+📃LUKSO-explorer_API_KEY variable in packages/hardhat/.env with your generated API key. You can get your key here.
+
+💬 Hint: It's recommended to store env's for nextjs in Vercel/system env config for live apps and use .env.local for local testing.
+
 ## Checkpoint 4: 📜 Contract Verification
+
+Run the yarn verify --network luksoTestnet command to verify your contracts on LUKSO testnet blockexplorer 🛰
+
+👉 Search this address on LUKSO testnet blockexplorer to get the URL you submit along with your deployed dapp to 🏃‍♀️speedrunlukso.com.
 
 ---
 
@@ -165,6 +215,6 @@ _Create all the required Checkpoints for the Challenge, can also add Side Quests
 ### ⚔️ Side Quests
 
 
-> 🏃 Head to your next challenge [here](https://speedrunethereum.com).
+> 🏃 Head to your next challenge [here](https://speedrunlukso.com).
 
 > 💬 Problems, questions, comments on the stack? Post them to the [Lukso Builders Telegram]()
