@@ -2,10 +2,10 @@
 
 {challengeHeroImage}
 
-In this challenge we're going to learn about how to make a LUKSO Grid Mini Dapp. The lukso grid is a new feature of Universal Profiles. It's technically a list of urls that is stored in the profiles metadata and sites like https://universaleverything.io/ open these urls in iframes and display them - with the added benefit of being able to pass additional web3 context betweeen the users (ie: the grid owner vs. the logged in UP user on universaleverything.io). This aditional context is given when we wrap our nextjs applicatio with an `UPProvider` component which we can get and initialize from the `up-provider` npm package https://www.npmjs.com/package/@lukso/up-provider
+In this challenge we're going to learn about how to make a LUKSO Grid Mini Dapp. The LUKSO grid is a new feature of Universal Profiles. It's technically a list of urls that is stored in the profile's metadata and sites like https://universaleverything.io/ open these urls in iframes and display them - with the added benefit of being able to pass additional web3 context betweeen the users (ie: the grid owner vs. the logged in UP user on universaleverything.io). This additional context is given when we wrap our nextjs application with an `UPProvider` component which we can get and initialize from the `up-provider` npm package https://www.npmjs.com/package/@lukso/up-provider
 
-🌟 The final deliverable is an app that works with LUKSO Universla Profiles and uses the up-provider to make it a grid mini app. We encourage you building something completely new with the new additional contexts accounts available to the dapp. If your struggling for ideas, then you can convert one of the previous challenge examples into a grid mini dapp. Be creative and your own creatie spin to them and mayeb even take them to mainnet!
-Deploy your contracts to a testnet then build and upload your app to a public web server. Submit the url on [SpeedRunLUKSO.com](https://speedrunlukso.com)!
+🌟 The final deliverable is an app that works with LUKSO Universla Profiles and uses the up-provider to make it a grid mini app. We encourage you building something completely new with the new additional contexts accounts available to the dapp. If your struggling for ideas, then you can convert one of the previous challenge examples into a grid mini dapp. Be creative and add your own spin to them and maybe even take it to mainnet!
+Deploy your contracts to a testnet/mainnet then build and upload your app to a public web server. Submit the url on [SpeedRunLUKSO.com](https://speedrunlukso.com)!
 
 💬 Meet other builders working on this challenge and get help in the {LuksoBuildersTelegramLink}
 
@@ -22,8 +22,8 @@ Before you begin, you need to install the following tools:
 Then download the challenge to your computer and install dependencies by running:
 
 ```sh
-git clone https://github.com/scaffold-eth/se-2-challenges.git {challengeName}
-cd {challengeName}
+git clone https://github.com/tantodefi/SpeedRunLUKSO/tree/Challenge-5-grid-mini-dapp
+cd Challenge-5-grid-mini-dapp
 git checkout Challenge-5-grid-mini-dapp
 yarn install
 ```
@@ -37,14 +37,14 @@ yarn chain
 > in a second terminal window, 🛰 deploy your contract (locally):
 
 ```sh
-cd <challenge_folder_name>
+cd Challenge-5-grid-mini-dapp
 yarn deploy
 ```
 
 > in a third terminal window, start your 📱 frontend:
 
 ```sh
-cd <challenge_folder_name>
+cd Challenge-5-grid-mini-dapp
 yarn start
 ```
 
@@ -52,7 +52,7 @@ yarn start
 
 > 👩‍💻 Rerun `yarn deploy --reset` whenever you want to deploy new contracts to the frontend, update your current contracts with changes, or re-deploy it to get a fresh contract address.
 
-🔏 Now you are ready to edit your smart contract `{mainContractName.sol}` in `packages/hardhat/contracts`
+🔏 Now you are ready to edit your smart contract `YourContract.sol` in `packages/hardhat/contracts`
 
 ---
 
@@ -63,9 +63,14 @@ yarn start
 Follow these steps to add Universal Profiles support to your Next.js app using the [@lukso/up-provider](https://www.npmjs.com/package/@lukso/up-provider):
 
 1. **Install the up-provider package**
-   ```sh
-   npm install @lukso/up-provider --legacy-peer-deps
-   ```
+
+```sh
+npm install @lukso/up-provider
+```
+OR
+```sh
+npm install @lukso/up-provider --legacy-peer-deps
+```
 
 2. **Create a UpProvider component** in `packages/nextjs/components/UpProvider.tsx`:
    ```tsx
@@ -160,17 +165,17 @@ Add the localhost:3000 url to your grid on https://universaleverything.io/
 
 you should see the homepage of our se2 dapp open with a button to connect your UP in the top left corner of the grid
 
-![alt text](grid-owner.png)
+![Grid Owner](packages/nextjs/public/grid-owner.png)
 
 here we're showing you an example of how we're detecting a grid owner from the contextaccounts
 
 you can see that once we connect we have access to another account which we can use for transactions 
 
-![alt text](grid-owner-1.png)
+![Connected UP](packages/nextjs/public/connected-up.png)
 
-so from here - you can basically take on eof the previous challenges examples and make it into a grid mini dapp. 
+so from here - you can basically take one of the previous example challenges and make it into a grid mini dapp. 
 
-🌐 Create a grid mini-app from one of the previous challenges builds using the @lukso/up-provider package and host the grid app on Universal Everything profile. The goal here is to get one of the previous starter builds live as a grid mini-app, be creative and maybe even ship them to mainnet!
+🌐 Create a grid mini-app from one of the previous challenges builds using the `@lukso/up-provider` package and host the grid app on your Universal Everything profile. The goal here is to get one of the previous starter builds live as a grid mini-app, be creative and maybe even ship them to mainnet!
 
 - [ ] basic LSP8 nft example
 - [ ] basic LSP7 token vending machine
@@ -179,7 +184,7 @@ so from here - you can basically take on eof the previous challenges examples an
 
 Don't be scared to add more features to these basic examples making them even more interesting mini dapps!
 
-think about how to make interesting new UI's based on dapps whose when are loaded in the context of a grid maybe render differently - a great example of this is the official mini dapp example starter repo form the 
+think about how to make interesting new UI's based on when the added contexts are loaded for example in the context of a grid maybe render differently - a great example of this is the official mini dapp example starter repo form the 
 LUKSO team https://github.com/lukso-network/miniapp-nextjs-template
 
 alternatively you can also build a new dapp from scratch - and search for ideas/code/inspiration on https://app.buidlguidl.com/builds
@@ -223,8 +228,6 @@ Run the yarn verify --network luksoTestnet command to verify your contracts on L
 👉 Search this address on LUKSO testnet blockexplorer to get the URL you submit along with your deployed dapp to 🏃‍♀️speedrunlukso.com.
 
 ---
-
-_Create all the required Checkpoints for the Challenge, can also add Side Quests you think may be interesting to complete. Check other Challenges for inspiration._
 
 ### ⚔️ Side Quests
 

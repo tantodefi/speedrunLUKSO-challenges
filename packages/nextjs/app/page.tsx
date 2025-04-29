@@ -178,7 +178,7 @@ const Home: NextPage = () => {
     <div className="flex items-center flex-col flex-grow pt-10">
       {contextAccounts.length === 0 && (
         <div className="mb-8 p-4 rounded-lg bg-warning text-warning-content shadow w-full max-w-xl">
-          Loading Universal Profile context... (Make sure your UP extension is installed and connected)
+          Loading Universal Profile context... (Make sure your UP browser extension is installed and connected and your opening the dapp on a grid on <a href="https://universaleverything.io/">https://universaleverything.io/</a>)
         </div>
       )}
       <div className="mb-8 p-4 rounded-lg bg-base-200 shadow w-full max-w-xl">
@@ -192,7 +192,7 @@ const Home: NextPage = () => {
           <span className="block text-4xl font-bold">Challenge #5: Grid Mini Dapp Challenge </span>
         </h1>
         <p className="text-center text-lg">
-          This homepage demonstrates how to listen to Universal Profile (UP) events and fetch LSP3Profile data using <code>@erc725/erc725.js</code>.
+          This homepage demonstrates how to listen to Universal Profile (UP) events using <code>@lukso/up-provider</code> and fetch LSP3Profile data using <code>@erc725/erc725.js</code>.
         </p>
         <p className="text-center text-lg mt-2">
           Edit <code>packages/nextjs/app/page.tsx</code> to customize this logic for your dapp!
