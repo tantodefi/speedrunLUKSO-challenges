@@ -88,7 +88,7 @@ Check out already migrated Challenges to get a better idea of the structure and 
 
 A quick start guide.
 
-### 1. Branch from [base-challenge-template](https://github.com/scaffold-eth/se-2-challenges/tree/base-challenge-template)
+### 1. Branch from [base-challenge-template](https://github.com/tantodefi/SpeedRunLUKSO/tree/base-challenge-template)
 
 At `base-challenge-template` branch we will be adding the latest updates from Scaffold ETH 2. We'll also include the learnings we acquire during the Challenges we are adding, as well as the code that may be common to all the Challenges.
 
@@ -122,7 +122,7 @@ You will need to add the following image assets in `packages/nextjs/public` fold
 - **Hero image.** `hero.png`
   It's a wider version of the Thumbnail with SRE logo at the bottom right. Used as README header, and as `pages/index.tsx` hero image.
 
-### 6. Edit README adapting the [base template](https://github.com/scaffold-eth/se-2-challenges/tree/base-challenge-template#readme)
+### 6. Edit README adapting the [base template](https://github.com/tantodefi/SpeedRunLUKSO/tree/base-challenge-template#readme)
 
 Adapt the base template README using the SE-1 version as a reference.
 
