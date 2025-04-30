@@ -20,11 +20,11 @@ export const MyHoldings = () => {
   const [allCollectiblesLoading, setAllCollectiblesLoading] = useState(false);
 
   const { data: yourCollectibleContract } = useScaffoldContract({
-    contractName: "YourCollectible",
+    contractName: "YourLSP8Collectible",
   });
 
   const { data: myTotalBalance } = useScaffoldReadContract({
-    contractName: "YourCollectible",
+    contractName: "YourLSP8Collectible",
     functionName: "balanceOf",
     args: [connectedAddress],
     watch: true,
@@ -37,33 +37,50 @@ export const MyHoldings = () => {
 
       setAllCollectiblesLoading(true);
       const collectibleUpdate: Collectible[] = [];
-      const totalBalance = parseInt(myTotalBalance.toString());
-      for (let tokenIndex = 0; tokenIndex < totalBalance; tokenIndex++) {
+      // Use allTokenIds() to enumerate all minted NFTs
+      const allTokenIds: string[] = await yourCollectibleContract.read.allTokenIds();
+      for (const tokenId of allTokenIds) {
         try {
-          const tokenId = await yourCollectibleContract.read.tokenOfOwnerByIndex([
-            connectedAddress,
-            BigInt(tokenIndex),
-          ]);
-
-          const tokenURI = await yourCollectibleContract.read.tokenURI([tokenId]);
-
-          const ipfsHash = tokenURI.replace("https://ipfs.io/ipfs/", "");
-
-          const nftMetadata: NFTMetaData = await getMetadataFromIPFS(ipfsHash);
-
-          collectibleUpdate.push({
-            id: parseInt(tokenId.toString()),
-            uri: tokenURI,
-            owner: connectedAddress,
-            ...nftMetadata,
-          });
+          const owner = await yourCollectibleContract.read.tokenOwnerOf([tokenId]);
+          if (owner.toLowerCase() === connectedAddress.toLowerCase()) {
+            // Fetch metadata URI from contract (LUKSO way)
+            const metadataURI = await yourCollectibleContract.read.getTokenMetadata([tokenId]);
+            console.log("[NFT Debug] tokenId:", tokenId, "metadataURI:", metadataURI);
+            let nftMetadata = {};
+            let validMetadata = false;
+            if (
+              metadataURI &&
+              typeof metadataURI === "string" &&
+              metadataURI.startsWith("ipfs://") &&
+              metadataURI.length > "ipfs://".length
+            ) {
+              const ipfsUrl = metadataURI.replace("ipfs://", "https://ipfs.io/ipfs/");
+              console.log("[NFT Debug] Fetching metadata from IPFS:", ipfsUrl);
+              try {
+                const response = await fetch(ipfsUrl);
+                nftMetadata = await response.json();
+                validMetadata = true;
+                console.log("[NFT Debug] Metadata fetched:", nftMetadata);
+              } catch (err) {
+                console.error("[NFT Debug] Failed to fetch or parse metadata from IPFS for token", tokenId, err);
+                // If fetch fails, leave nftMetadata empty
+              }
+            } else {
+              console.warn("[NFT Debug] Invalid or missing metadataURI for token", tokenId, metadataURI);
+            }
+            collectibleUpdate.push({
+              id: tokenId,
+              uri: metadataURI,
+              owner,
+              LSP4Metadata: validMetadata && nftMetadata.LSP4Metadata ? nftMetadata.LSP4Metadata : undefined,
+            });
+          }
         } catch (e) {
-          notification.error("Error fetching all collectibles");
-          setAllCollectiblesLoading(false);
-          console.log(e);
+          // Ignore tokens that error
         }
       }
-      collectibleUpdate.sort((a, b) => a.id - b.id);
+      // Sort by tokenId (as string, since bytes32 hex)
+      collectibleUpdate.sort((a, b) => a.id.localeCompare(b.id));
       setMyAllCollectibles(collectibleUpdate);
       setAllCollectiblesLoading(false);
     };
