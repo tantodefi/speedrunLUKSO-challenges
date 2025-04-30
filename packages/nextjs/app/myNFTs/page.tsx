@@ -62,7 +62,7 @@ const MyNFTs: NextPage = () => {
       <div className="flex items-center flex-col pt-10">
         <div className="px-5">
           <h1 className="text-center mb-8">
-            <span className="block text-4xl font-bold">My NFTs</span>
+            <span className="block text-4xl font-bold">My LSP8 NFTs</span>
           </h1>
         </div>
       </div>
@@ -70,10 +70,10 @@ const MyNFTs: NextPage = () => {
         <button className="btn btn-secondary" onClick={handleMintItem}>
           Mint NFT
         </button>
-        <div className="mt-2 text-xs text-gray-500">
+        {/* <div className="mt-2 text-xs text-gray-500">
           isConnected: {String(isConnected)}, isConnecting: {String(isConnecting)}, connectedAddress: {connectedAddress}<br />
           <span>Generated tokenId: (see console on mint)</span>
-        </div>
+        </div> */}
         {!isConnected && <div className="text-red-500">Wallet not connected</div>}
       </div>
       <MyHoldings />

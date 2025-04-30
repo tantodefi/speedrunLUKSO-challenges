@@ -106,9 +106,9 @@ yarn start
 
 > Can you mint an NFT with no funds in this address? You might need to grab funds from the faucet to pay for the gas!
 
-🕵🏻‍♂️ Inspect the `Debug Contracts` tab to figure out what address is the owner of YourCollectible?
+🕵🏻‍♂️ Inspect the `Debug Contracts` tab to figure out what address is the owner of YourLSP8Collectible?
 
-🔏 You can also check out your smart contract `YourCollectible.sol` in `packages/hardhat/contracts`.
+🔏 You can also check out your smart contract `YourLSP8Collectible.sol` in `packages/hardhat/contracts`.
 
 💼 Take a quick look at your deploy script `00_deploy_your_contract.js` in `packages/hardhat/deploy`.
 
@@ -138,14 +138,13 @@ yarn start
 
 > The LUKSO testnet faucet can be found [here](https://faucet.testnet.lukso.network/). Simply click the button at the bottom of the page to 'tweet' the request for funds and make sure to copy in your deployer address. You will need a twitter/X account to use the faucet.
 
-> ⚔️ Side Quest: Keep a 🧑‍🎤 [punkwallet.io](https://punkwallet.io) on your phone's home screen and keep it loaded with testnet eth. 🧙‍♂️ You'll look like a wizard when you can fund your deployer address from your phone in seconds.
+> ⚔️ Side Quest: Keep a 🧑‍🎤 [punkwallet.io](https://punkwallet.io) on your phone's home screen and keep it loaded with some LYXt. 🧙‍♂️ You'll look like a wizard when you can fund your deployer address from your phone in seconds.
 
 🚀 Deploy your NFT smart contract with `yarn deploy`.
 
-> 💬 Hint: You can set the `defaultNetwork` in `hardhat.config.ts` to `luksoTestnet` **OR** you can `yarn deploy --network sepolia`.
+> 💬 Hint: You can set the `defaultNetwork` in `hardhat.config.ts` to `luksoTestnet` **OR** you can `yarn deploy --network luksoTestnet`.
 
-🎉 Congrats! You've just deployed very first contract to LUKSO testnet! There's only one problem... You just deployed an ERC721 contract which is the old NFT standard. LUKSO is a new EVM-layer 1 chain powered by new solidity standards - instead of ERC's they're called LSP's (LUKSO standards Proposals). Continue on in the next section to learn about the new NFT standard LSP8.
-
+🎉 Congrats! You've just deployed very first contract to LUKSO testnet!
 ---
 
 ## Checkpoint 4: 💡 Learn the differences between ERC721 and LSP8! ⚡
@@ -335,9 +334,9 @@ yarn verify --network luksoTestnet
 
 ### 🔥 Universal Page
 
-> 🐃 Want to see your new NFTs on a testnet marketplace? Head to [Universal Page testnet]()
+> 🐃 Want to see your new NFTs on a testnet marketplace? Head to [Universal Everything](https://universealeverything.io/)
 
-> 🎫 Make sure you have minted some NFTs on your Vercel page (in a testnet UP), then connect to Universal Page using that same wallet.
+> 🎫 Make sure you have minted some NFTs on your Vercel page (in a testnet UP), then connect to Universal Everything using that same wallet.
 
 ![image](https://github.com/scaffold-eth/se-2-challenges/assets/80153681/c752b365-b801-4a02-ba2e-62e0270b3795)
 
