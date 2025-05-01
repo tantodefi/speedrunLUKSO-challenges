@@ -63,7 +63,18 @@ function getInheritedFunctions(sources: Record<string, any>, contractName: strin
     const sourcePath = Object.keys(sources).find(key => key.includes(`/${sourceContractName}`));
     if (sourcePath) {
       const sourceName = sourcePath?.split("/").pop()?.split(".sol")[0];
-      const { abi } = JSON.parse(fs.readFileSync(`${ARTIFACTS_DIR}/${sourcePath}/${sourceName}.json`).toString());
+      let abi = [];
+      let artifactPath = `${ARTIFACTS_DIR}/${sourcePath}/${sourceName}.json`;
+      if (!fs.existsSync(artifactPath)) {
+        // Try build-deps location if not found in main artifacts
+        artifactPath = `${ARTIFACTS_DIR}/build-deps/${sourcePath}/${sourceName}.json`;
+      }
+      try {
+        abi = JSON.parse(fs.readFileSync(artifactPath).toString()).abi;
+      } catch (err) {
+        console.warn(`Warning: ABI artifact not found for ${sourceName}, skipping.`);
+        continue;
+      }
       for (const functionAbi of abi) {
         if (functionAbi.type === "function") {
           inheritedFunctions[functionAbi.name] = sourcePath;

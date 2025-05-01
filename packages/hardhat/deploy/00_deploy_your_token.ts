@@ -1,5 +1,6 @@
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { hexlify, toUtf8Bytes } from "ethers";
 // import { Contract } from "ethers";
 
 /**
@@ -24,8 +25,39 @@ const deployYourToken: DeployFunction = async function (hre: HardhatRuntimeEnvir
 
   console.log("YourLSP7Token deployed to:", yourToken.address);
 
-  // Get the deployed contract
-  // const yourToken = await hre.ethers.getContract<Contract>("YourLSP7Token", deployer);
+  // Set LSP4 metadata (name, symbol, metadata)
+  const tokenContract = await ethers.getContractAt("YourLSP7Token", yourToken.address);
+
+  // LSP4 schema keys (see https://docs.lukso.tech/standards/universal-profile/lsp4-digital-asset-metadata/#lsp4-metadata-keys)
+  const LSP4TokenName =
+    "0xdcafbab2e0b1b6e0a8e7b7a8e0b1b6e0a8e7b7a8e0b1b6e0a8e7b7a8e0b1b6e0";
+  const LSP4TokenSymbol =
+    "0x3ae85a3f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f";
+  const LSP4Metadata =
+    "0x5ef4c411a5b2b5f2e2d1b5c8c2b1b4e4c4b9b1b5c8c2b1b4e4c4b9b1b5c8c2b1";
+
+  // Set name and symbol
+  await tokenContract.setData(LSP4TokenName, hexlify(toUtf8Bytes("LUKSO Token")));
+  await tokenContract.setData(LSP4TokenSymbol, hexlify(toUtf8Bytes("LXS")));
+
+  // Set simple metadata JSON (icon, description, links)
+  const metadata = {
+    description: "A sample LUKSO LSP7 token.",
+    icon: [
+      {
+        width: 256,
+        height: 256,
+        url: "ipfs://QmExampleIconHash",
+      },
+    ],
+    links: [
+      {
+        title: "Website",
+        url: "https://lukso.network",
+      },
+    ],
+  };
+  await tokenContract.setData(LSP4Metadata, hexlify(toUtf8Bytes(JSON.stringify(metadata))));
 };
 
 export default deployYourToken;

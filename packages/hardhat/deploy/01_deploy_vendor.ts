@@ -29,8 +29,13 @@ const deployVendor: DeployFunction = async function (hre: HardhatRuntimeEnvironm
   
   // Transfer 100 tokens to the vendor
   const transferAmount = ethers.parseUnits("100", 18);
-  
+
+  // Mint tokens to the deployer before transferring
+  console.log("Minting tokens to deployer...");
+  await tokenContract.mint(deployer, transferAmount, true, "0x");
+
   // Use the correct transfer parameters for LSP7
+  console.log("Transferring tokens to the Vendor...");
   await tokenContract.transfer(deployer, vendor.address, transferAmount, true, "0x");
   
   const vendorBalance = await tokenContract.balanceOf(vendor.address);

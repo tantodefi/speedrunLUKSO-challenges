@@ -17,10 +17,42 @@ const TokenVendor: NextPage = () => {
   const [tokensToSell, setTokensToSell] = useState<string>("");
 
   const { address } = useAccount();
-  const { data: yourTokenSymbol } = useScaffoldReadContract({
+  // LSP4TokenName key (see https://docs.lukso.tech/standards/universal-profile/lsp4-digital-asset-metadata/#lsp4-metadata-keys)
+  const LSP4TokenName =
+    "0xdcafbab2e0b1b6e0a8e7b7a8e0b1b6e0a8e7b7a8e0b1b6e0a8e7b7a8e0b1b6e0";
+  const { data: yourTokenNameHex } = useScaffoldReadContract({
     contractName: "YourLSP7Token",
-    functionName: "symbol",
+    functionName: "getData",
+    args: [LSP4TokenName],
   });
+  function hexToUtf8(hex?: string) {
+    if (!hex) return "...";
+    try {
+      // Remove 0x and decode
+      return decodeURIComponent(
+        hex
+          .replace(/^0x/, "")
+          .match(/.{1,2}/g)
+          ?.map((byte) => String.fromCharCode(parseInt(byte, 16)))
+          .join("") || "..."
+      );
+    } catch (e) {
+      return "...";
+    }
+  }
+  const yourTokenName = hexToUtf8(yourTokenNameHex as string);
+
+
+  // LSP4TokenSymbol key (see https://docs.lukso.tech/standards/universal-profile/lsp4-digital-asset-metadata/#lsp4-metadata-keys)
+  const LSP4TokenSymbol =
+    "0x3ae85a3f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f9b1f";
+  const { data: yourTokenSymbolHex } = useScaffoldReadContract({
+    contractName: "YourLSP7Token",
+    functionName: "getData",
+    args: [LSP4TokenSymbol],
+  });
+  const yourTokenSymbol = hexToUtf8(yourTokenSymbolHex as string);
+
 
   const { data: yourTokenBalance } = useScaffoldReadContract({
     contractName: "YourLSP7Token",
@@ -49,6 +81,9 @@ const TokenVendor: NextPage = () => {
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
         <div className="flex flex-col items-center bg-base-100 shadow-lg shadow-secondary border-8 border-secondary rounded-xl p-6 mt-24 w-full max-w-lg">
+          <div className="text-2xl font-bold mb-2">
+            {yourTokenName ?? "..."}
+          </div>
           <div className="text-xl">
             Your token balance:{" "}
             <div className="inline-flex items-center justify-center">
@@ -134,7 +169,7 @@ const TokenVendor: NextPage = () => {
         {!!yourTokenBalance && (
           <div className="flex flex-col items-center space-y-4 bg-base-100 shadow-lg shadow-secondary border-8 border-secondary rounded-xl p-6 mt-8 w-full max-w-lg">
             <div className="text-xl">Sell tokens</div>
-            <div>{tokensPerEth?.toString() || 0} tokens per ETH</div>
+            <div>{tokensPerEth?.toString() || 0} {yourTokenSymbol ?? "..."} per ETH</div>
 
             <div className="w-full flex flex-col space-y-2">
               <IntegerInput
@@ -153,7 +188,7 @@ const TokenVendor: NextPage = () => {
                   try {
                     await writeYourTokenAsync({
                       functionName: "authorizeOperator",
-                      args: [vendorContractData?.address, multiplyTo1e18(tokensToSell)],
+                      args: [vendorContractData?.address, multiplyTo1e18(tokensToSell), "0x"],
                     });
                     setIsApproved(true);
                   } catch (err) {

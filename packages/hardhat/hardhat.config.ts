@@ -9,6 +9,8 @@ import "solidity-coverage";
 import "@nomicfoundation/hardhat-verify";
 import "hardhat-deploy";
 import "hardhat-deploy-ethers";
+import "hardhat-dependency-compiler";
+
 
 // If not set, it uses ours Alchemy's default API key.
 // You can get your own at https://dashboard.alchemyapi.io
@@ -20,8 +22,15 @@ const deployerPrivateKey =
 const etherscanApiKey = process.env.ETHERSCAN_API_KEY || "DNXJA8RX2Q3VZ4URQIWP7Z68CJXQZSC6AW";
 
 const config: HardhatUserConfig = {
+  paths: {
+    sources: "./contracts",
+  },
+  ignoreFiles: [
+    "node_modules/@lukso/lsp7-contracts/contracts/**/*",
+    "node_modules/@erc725/smart-contracts*/contracts/**/*"
+  ],
   solidity: {
-    version: "0.8.9",
+    version: "0.8.20",
     settings: {
       optimizer: {
         enabled: true,
@@ -31,6 +40,11 @@ const config: HardhatUserConfig = {
     },
   },
   defaultNetwork: "localhost",
+  dependencyCompiler: {
+    paths: [
+      '@lukso/lsp-smart-contracts/contracts/LSP7DigitalAsset/LSP7DigitalAsset.sol',
+    ],
+  },
   namedAccounts: {
     deployer: {
       // By default, it will take the first Hardhat account as the deployer
@@ -132,6 +146,7 @@ const config: HardhatUserConfig = {
   sourcify: {
     enabled: false,
   },
+
 };
 
 export default config;
