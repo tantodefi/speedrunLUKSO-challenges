@@ -117,27 +117,99 @@ We've created a basic LSP7 token contract in `packages/hardhat/contracts/YourLSP
 After deploying your LSP7 token, you'll need to set its metadata. Create a script like this:
 
 ```typescript
-import { ERC725YDataKeys } from '@lukso/lsp-smart-contracts';
+import { hexlify, toUtf8Bytes } from "ethers";
+// LSP4 keys
+const LSP4Metadata = "0x5ef4c411a5b2b5f2e2d1b5c8c2b1b4e4c4b9b1b5c8c2b1b4e4c4b9b1b5c8c2b1";
 
-// First, set the basic token metadata
-await token.setData(
-    LSP4_METADATA_KEY,
-    encodeMetadata({
-        name: "Your LSP7 Token",
-        symbol: "LSP7",
-        description: "My awesome LSP7 token on LUKSO",
-        links: [{
-            title: "Website",
-            url: "https://your-website.com"
-        }],
-    })
+// Set advanced metadata (icon, description, links)
+const metadata = {
+  description: "A sample LUKSO LSP7 token.",
+  icon: [
+    {
+      width: 256,
+      height: 256,
+      url: "ipfs://QmExampleIconHash",
+    },
+  ],
+  links: [
+    {
+      title: "Website",
+      url: "https://lukso.network",
+    },
+  ],
+};
+await tokenContract.setData(LSP4Metadata, hexlify(toUtf8Bytes(JSON.stringify(metadata))));
+```
+
+---
+
+### Sample React UI for LSP4 Metadata
+
+You can fetch and display LSP4 metadata (icon, description, links) in your frontend like this:
+
+```tsx
+// Fetch metadata from contract
+const LSP4Metadata = "0x5ef4c411a5b2b5f2e2d1b5c8c2b1b4e4c4b9b1b5c8c2b1b4e4c4b9b1b5c8c2b1";
+const { data: metadataHex } = useScaffoldReadContract({
+  contractName: "YourLSP7Token",
+  functionName: "getData",
+  args: [LSP4Metadata],
+});
+
+function hexToUtf8(hex?: string) {
+  if (!hex) return "";
+  try {
+    return decodeURIComponent(
+      hex.replace(/^0x/, "")
+        .match(/.{1,2}/g)
+        ?.map((byte) => String.fromCharCode(parseInt(byte, 16)))
+        .join("") || ""
+    );
+  } catch (e) {
+    return "";
+  }
+}
+
+let metadata: any = {};
+try {
+  metadata = JSON.parse(hexToUtf8(metadataHex as string));
+} catch {}
+
+return (
+  <div>
+    {metadata.icon && metadata.icon.length > 0 && (
+      <img
+        src={metadata.icon[0].url.replace("ipfs://", "https://ipfs.io/ipfs/")}
+        alt="Token Icon"
+        width={metadata.icon[0].width}
+        height={metadata.icon[0].height}
+      />
+    )}
+    <div>Description: {metadata.description}</div>
+    {metadata.links && metadata.links.length > 0 && (
+      <div>
+        Links:
+        <ul>
+          {metadata.links.map((link: any, idx: number) => (
+            <li key={idx}>
+              <a href={link.url} target="_blank" rel="noopener noreferrer">
+                {link.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
 );
+```
 
-// Then set verified creators (optional but recommended)
-const creatorAddress = "0x..."; // Your creator address
-const ARRAY_LENGTH = ERC725YDataKeys.LSP4["LSP4Creators[]"].length;
-const ARRAY_KEY = ERC725YDataKeys.LSP4["LSP4Creators[]"].key;
-const CREATOR_KEY = ERC725YDataKeys.LSP4.LSP4CreatorsMap + creatorAddress.substring(2);
+**Where is this metadata set?**
+- The metadata is set in your Hardhat deployment script (see above: `setData(LSP4Metadata, ...)`).
+- The frontend fetches and displays it using the `getData` call and renders the fields as shown.
+
+---
+
 
 await token.setDataBatch(
     [
