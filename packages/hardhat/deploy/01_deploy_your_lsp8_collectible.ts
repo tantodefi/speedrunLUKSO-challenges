@@ -1,3 +1,4 @@
+// This deployment script is disabled. Only LSP8Loogies will be deployed.
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 

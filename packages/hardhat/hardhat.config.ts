@@ -24,10 +24,11 @@ const config: HardhatUserConfig = {
     version: "0.8.17",
     settings: {
       optimizer: {
-        enabled: false,
+        enabled: true,
         // https://docs.soliditylang.org/en/latest/using-the-compiler.html#optimizer-options
-        runs: 200,
+        runs: 30,
       },
+      viaIR: true,
     },
   },
   defaultNetwork: "localhost",
@@ -120,9 +121,7 @@ const config: HardhatUserConfig = {
     },
     luksoTestnet: {
       url: "https://rpc.testnet.lukso.network",
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-      },
+      accounts: process.env.MNEMONIC ? { mnemonic: process.env.MNEMONIC } : [],
       chainId: 4201,
     },
   },

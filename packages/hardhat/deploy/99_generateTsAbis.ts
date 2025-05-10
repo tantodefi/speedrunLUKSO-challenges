@@ -34,44 +34,8 @@ function getContractNames(path: string) {
     .map(dirent => dirent.name.split(".")[0]);
 }
 
-function getActualSourcesForContract(sources: Record<string, any>, contractName: string) {
-  for (const sourcePath of Object.keys(sources)) {
-    const sourceName = sourcePath.split("/").pop()?.split(".sol")[0];
-    if (sourceName === contractName) {
-      const contractContent = sources[sourcePath].content as string;
-      const regex = /contract\s+(\w+)\s+is\s+([^{}]+)\{/;
-      const match = contractContent.match(regex);
-
-      if (match) {
-        const inheritancePart = match[2];
-        // Split the inherited contracts by commas to get the list of inherited contracts
-        const inheritedContracts = inheritancePart.split(",").map(contract => `${contract.trim()}.sol`);
-
-        return inheritedContracts;
-      }
-      return [];
-    }
-  }
-  return [];
-}
-
 function getInheritedFunctions(sources: Record<string, any>, contractName: string) {
-  const actualSources = getActualSourcesForContract(sources, contractName);
   const inheritedFunctions = {} as Record<string, any>;
-
-  for (const sourceContractName of actualSources) {
-    const sourcePath = Object.keys(sources).find(key => key.includes(`/${sourceContractName}`));
-    if (sourcePath) {
-      const sourceName = sourcePath?.split("/").pop()?.split(".sol")[0];
-      const { abi } = JSON.parse(fs.readFileSync(`${ARTIFACTS_DIR}/${sourcePath}/${sourceName}.json`).toString());
-      for (const functionAbi of abi) {
-        if (functionAbi.type === "function") {
-          inheritedFunctions[functionAbi.name] = sourcePath;
-        }
-      }
-    }
-  }
-
   return inheritedFunctions;
 }
 
@@ -87,7 +51,12 @@ function getContractDataFromDeployments() {
       const { abi, address, metadata } = JSON.parse(
         fs.readFileSync(`${DEPLOYMENTS_DIR}/${chainName}/${contractName}.json`).toString(),
       );
-      const inheritedFunctions = getInheritedFunctions(JSON.parse(metadata).sources, contractName);
+      let inheritedFunctions = {};
+      try {
+        inheritedFunctions = getInheritedFunctions(JSON.parse(metadata).sources, contractName);
+      } catch (e) {
+        console.log(`Could not parse metadata for ${contractName}, skipping inheritance info`);
+      }
       contracts[contractName] = { address, abi, inheritedFunctions };
     }
     output[chainId] = contracts;
@@ -101,27 +70,37 @@ function getContractDataFromDeployments() {
  */
 const generateTsAbis: DeployFunction = async function () {
   const TARGET_DIR = "../nextjs/contracts/";
-  const allContractsData = getContractDataFromDeployments();
+  let allContractsData;
+  
+  try {
+    allContractsData = getContractDataFromDeployments();
+  } catch (e) {
+    console.log("Error getting contract data:", e);
+    return;
+  }
 
   const fileContent = Object.entries(allContractsData).reduce((content, [chainId, chainConfig]) => {
     return `${content}${parseInt(chainId).toFixed(0)}:${JSON.stringify(chainConfig, null, 2)},`;
   }, "");
 
   if (!fs.existsSync(TARGET_DIR)) {
-    fs.mkdirSync(TARGET_DIR);
+    fs.mkdirSync(TARGET_DIR, { recursive: true });
   }
-  fs.writeFileSync(
-    `${TARGET_DIR}deployedContracts.ts`,
-    prettier.format(
-      `${generatedContractComment} import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract"; \n\n
- const deployedContracts = {${fileContent}} as const; \n\n export default deployedContracts satisfies GenericContractsDeclaration`,
-      {
-        parser: "typescript",
-      },
-    ),
-  );
-
-  console.log(`📝 Updated TypeScript contract definition file on ${TARGET_DIR}deployedContracts.ts`);
+  
+  try {
+    fs.writeFileSync(
+      `${TARGET_DIR}deployedContracts.ts`,
+      prettier.format(
+        `${generatedContractComment}import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";\n\nconst deployedContracts = {${fileContent}} as const;\n\nexport default deployedContracts satisfies GenericContractsDeclaration`,
+        {
+          parser: "typescript",
+        },
+      ),
+    );
+    console.log(`📝 Updated TypeScript contract definition file on ${TARGET_DIR}deployedContracts.ts`);
+  } catch (e) {
+    console.log("Error writing TypeScript definition file:", e);
+  }
 };
 
 export default generateTsAbis;

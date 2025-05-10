@@ -1,21 +1,21 @@
-import { ethers } from "hardhat";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { DeployFunction } from "hardhat-deploy/types";
 
-async function main() {
-  const [deployer] = await ethers.getSigners();
-  console.log("Deploying contracts with the account:", deployer.address);
+const deployLSP8Loogies: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  const { deployer } = await hre.getNamedAccounts();
+  const { deploy } = hre.deployments;
 
   // Set your name and symbol here
   const name = "OptimisticLoogies";
   const symbol = "OPLOOG";
 
-  const LSP8Loogies = await ethers.getContractFactory("LSP8Loogies");
-  const loogies = await LSP8Loogies.deploy(name, symbol, deployer.address);
-  await loogies.deployed();
+  await deploy("LSP8Loogies", {
+    from: deployer,
+    args: [name, symbol, deployer],
+    log: true,
+    autoMine: true,
+  });
+};
 
-  console.log(`LSP8Loogies deployed to: ${loogies.address}`);
-}
-
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+export default deployLSP8Loogies;
+deployLSP8Loogies.tags = ["LSP8Loogies"];

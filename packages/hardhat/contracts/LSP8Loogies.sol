@@ -1,19 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@lukso/lsp-smart-contracts/contracts/LSP8IdentifiableDigitalAsset/LSP8IdentifiableDigitalAsset.sol";
-import "@lukso/lsp-smart-contracts/contracts/LSP8IdentifiableDigitalAsset/extensions/LSP8Mintable.sol";
-import "@lukso/lsp-smart-contracts/contracts/LSP8IdentifiableDigitalAsset/extensions/LSP8Burnable.sol";
+import "@lukso/lsp8-contracts/contracts/LSP8IdentifiableDigitalAsset.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 
 import "./HexStrings.sol";
 import "./ToColor.sol";
+// Patch for LUKSO v0.16.x compatibility
+library LSP8CompatPatch {
+    bytes4 constant LSP8_TOKENID_FORMAT_NUMBER = 0x00000000;
+}
 
-contract LSP8Loogies is LSP8IdentifiableDigitalAsset, LSP8Mintable, LSP8Burnable {
+
+
+import {LSP2Utils} from "@lukso/lsp2-contracts/contracts/LSP2Utils.sol";
+
+contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
     using Strings for uint256;
     using Strings for uint8;
-    using HexStrings for uint160;
+    using HexStrings for uint256;
     using ToColor for bytes3;
 
     uint256 private _tokenIds;
@@ -25,7 +31,7 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset, LSP8Mintable, LSP8Burnable
         string memory name,
         string memory symbol,
         address contractOwner
-    ) LSP8IdentifiableDigitalAsset(name, symbol, contractOwner, LSP8_TOKENID_FORMAT_NUMBER) {}
+    ) LSP8IdentifiableDigitalAsset(name, symbol, contractOwner, 1, uint256(uint32(LSP8CompatPatch.LSP8_TOKENID_FORMAT_NUMBER))) {}
 
     function mintLoogie(address to) public returns (bytes32) {
         _tokenIds += 1;
@@ -53,7 +59,7 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset, LSP8Mintable, LSP8Burnable
     }
 
     function tokenURI(bytes32 tokenId) public view returns (string memory) {
-        require(_exists(tokenId), "LSP8: Token does not exist");
+        require(tokenOwnerOf(tokenId) != address(0), "LSP8: Token does not exist");
         string memory name = string(abi.encodePacked("Loogie #", uint256(tokenId).toString()));
         string memory description = string(
             abi.encodePacked(
@@ -86,7 +92,7 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset, LSP8Mintable, LSP8Burnable
                             '},{"trait_type": "mouthLength", "value": ',
                             uint2str(mouthLength[tokenId]),
                             '}], "owner":"',
-                            (uint160(tokenOwnerOf(tokenId))).toHexString(20),
+                            HexStrings.toHexString(uint256(uint160(tokenOwnerOf(tokenId))), 20),
                             '", "image": "data:image/svg+xml;base64,',
                             image,
                             '"}'
@@ -158,7 +164,23 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset, LSP8Mintable, LSP8Burnable
         return string(bstr);
     }
 
-    function _exists(bytes32 tokenId) internal view returns (bool) {
-        return tokenOwnerOf(tokenId) != address(0);
+    // _exists is inherited from LSP8IdentifiableDigitalAsset or its parents. No need to redefine.
+
+
+    // --- Required LSP8 overrides for multiple inheritance ---
+    function getData(bytes32 key) public view override returns (bytes memory) {
+        return super.getData(key);
+    }
+
+    function getDataBatch(bytes32[] memory keys) public view override returns (bytes[] memory) {
+        return super.getDataBatch(keys);
+    }
+
+    function setData(bytes32 key, bytes memory value) public payable override {
+        super.setData(key, value);
+    }
+
+    function setDataBatch(bytes32[] memory keys, bytes[] memory values) public payable override {
+        super.setDataBatch(keys, values);
     }
 }

@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@lukso/lsp-smart-contracts/contracts/LSP8IdentifiableDigitalAsset/LSP8IdentifiableDigitalAsset.sol";
-import "@lukso/lsp-smart-contracts/contracts/LSP8IdentifiableDigitalAsset/extensions/LSP8Mintable.sol";
-import "@lukso/lsp-smart-contracts/contracts/LSP8IdentifiableDigitalAsset/extensions/LSP8Burnable.sol";
+import "@lukso/lsp8-contracts/contracts/LSP8IdentifiableDigitalAsset.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
+
+// Patch for LUKSO v0.16.x compatibility
+library LSP8CompatPatch {
+    bytes4 constant LSP8_TOKENID_FORMAT_NUMBER = 0x00000000;
+}
+
+
 
 /**
  * @title YourLSP8Collectible
  * @dev LSP8 Token contract for creating unique digital collectibles on LUKSO
  */
-contract YourLSP8Collectible is LSP8IdentifiableDigitalAsset, LSP8Mintable, LSP8Burnable {
+contract YourLSP8Collectible is LSP8IdentifiableDigitalAsset {
     using Strings for uint256;
 
     // Token name counter
@@ -24,17 +29,17 @@ contract YourLSP8Collectible is LSP8IdentifiableDigitalAsset, LSP8Mintable, LSP8
         string memory name,
         string memory symbol,
         address contractOwner
-    ) LSP8IdentifiableDigitalAsset(name, symbol, contractOwner, LSP8_TOKENID_FORMAT_NUMBER) {
+    ) LSP8IdentifiableDigitalAsset(name, symbol, contractOwner, 1, uint256(uint32(LSP8CompatPatch.LSP8_TOKENID_FORMAT_NUMBER))) {
         // Constructor initialization
     }
 
     // Function to mint new tokens with metadata
-    function mintItem(address to, string memory tokenURI) public returns (bytes32) {
+    function mintItem(address to, string memory tokenURI_) public returns (bytes32) {
         _tokenIds += 1;
         bytes32 tokenId = bytes32(uint256(_tokenIds));
         
         // Store the tokenURI
-        _tokenURIs[tokenId] = tokenURI;
+        _tokenURIs[tokenId] = tokenURI_;
         
         // Mint the token
         _mint(to, tokenId, true, "");
@@ -49,14 +54,14 @@ contract YourLSP8Collectible is LSP8IdentifiableDigitalAsset, LSP8Mintable, LSP8
     }
 
     // Function to check if a token exists
-    function _exists(bytes32 tokenId) internal view returns (bool) {
+    function _exists(bytes32 tokenId) internal view override returns (bool) {
         return tokenOwnerOf(tokenId) != address(0);
     }
 
     // Function to burn tokens
-    function burn(bytes32 tokenId) public override {
+    function burn(bytes32 tokenId) public {
         require(_isApprovedOrOwner(msg.sender, tokenId), "LSP8: Caller is not owner nor approved");
-        _burn(tokenId);
+        _burn(tokenId, "");
         delete _tokenURIs[tokenId];
     }
 
@@ -71,5 +76,22 @@ contract YourLSP8Collectible is LSP8IdentifiableDigitalAsset, LSP8Mintable, LSP8
         require(_exists(tokenId), "LSP8: URI set of nonexistent token");
         require(_isApprovedOrOwner(msg.sender, tokenId), "LSP8: Caller is not owner nor approved");
         _tokenURIs[tokenId] = newTokenURI;
+    }
+
+    // --- Required LSP8 overrides for multiple inheritance ---
+    function getData(bytes32 key) public view override(ERC725Y) returns (bytes memory) {
+        return super.getData(key);
+    }
+
+    function getDataBatch(bytes32[] memory keys) public view override(ERC725Y) returns (bytes[] memory) {
+        return super.getDataBatch(keys);
+    }
+
+    function setData(bytes32 key, bytes memory value) public payable override(ERC725Y) {
+        super.setData(key, value);
+    }
+
+    function setDataBatch(bytes32[] memory keys, bytes[] memory values) public payable override(ERC725Y) {
+        super.setDataBatch(keys, values);
     }
 }

@@ -42,5 +42,9 @@
   },
   "engines": {
     "node": ">=18.17.0"
+  },
+  "dependencies": {
+    "@erc725/smart-contracts": "latest",
+    "@lukso/lsp-smart-contracts": "^0.16.3"
   }
 }

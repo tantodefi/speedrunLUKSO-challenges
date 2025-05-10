@@ -1,0 +1,3 @@
+@erc725/smart-contracts/contracts/ERC725YCore.sol=contracts/erc725/ERC725YCore.sol
+@erc725/smart-contracts/contracts/interfaces/IERC725Y.sol=contracts/erc725/interfaces/IERC725Y.sol
+@erc725/smart-contracts/contracts/IERC165.sol=contracts/erc725/IERC165.sol
