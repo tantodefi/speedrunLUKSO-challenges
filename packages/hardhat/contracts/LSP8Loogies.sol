@@ -26,6 +26,8 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
     mapping(bytes32 => uint256) public mouthLength;
     // Store existing token IDs to check existence at runtime
     mapping(uint256 => bool) private _tokenIdExists;
+    // Store UP usernames for each token
+    mapping(bytes32 => string) public upUsernames;
 
     // all funds go to buidlguidl.eth (same as in YourCollectible)
     address payable public constant recipient =
@@ -74,12 +76,76 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
         mouthLength[tokenId] =
             180 + ((uint256(chubbiness[tokenId] / 4) * uint256(uint8(predictableRandom[4]))) / 255);
 
+        // Set default UP username
+        upUsernames[tokenId] = "luksonaut";
+
         _mint(msg.sender, tokenId, true, "");
 
         (bool success, ) = recipient.call{ value: msg.value }("");
         require(success, "could not send");
 
         return tokenId;
+    }
+
+    // Add batch mint function to mint multiple tokens at once
+    function batchMintItems(uint256 count) public payable returns (bytes32[] memory) {
+        require(count > 0, "Count must be greater than 0");
+        require(_tokenIds + count <= limit, "EXCEEDS LIMIT");
+        
+        // Calculate total price for all tokens with the increasing curve
+        uint256 totalPrice = 0;
+        uint256 currentPrice = price;
+        
+        for (uint256 i = 0; i < count; i++) {
+            totalPrice += currentPrice;
+            currentPrice = (currentPrice * curve) / 1000;
+        }
+        
+        require(msg.value >= totalPrice, "NOT ENOUGH");
+        
+        // Store the new tokens
+        bytes32[] memory tokenIds = new bytes32[](count);
+        
+        // Mint each token
+        for (uint256 i = 0; i < count; i++) {
+            _tokenIds += 1;
+            bytes32 tokenId = bytes32(uint256(_tokenIds));
+            _tokenIdExists[_tokenIds] = true;
+            
+            bytes32 predictableRandom = keccak256(
+                abi.encodePacked(
+                    tokenId,
+                    blockhash(block.number - 1),
+                    msg.sender,
+                    address(this),
+                    i // Add index to ensure uniqueness within the batch
+                )
+            );
+            
+            color[tokenId] =
+                bytes2(predictableRandom[0]) |
+                (bytes2(predictableRandom[1]) >> 8) |
+                (bytes3(predictableRandom[2]) >> 16);
+            chubbiness[tokenId] =
+                35 + ((55 * uint256(uint8(predictableRandom[3]))) / 255);
+            mouthLength[tokenId] =
+                180 + ((uint256(chubbiness[tokenId] / 4) * uint256(uint8(predictableRandom[4]))) / 255);
+            
+            // Set default UP username
+            upUsernames[tokenId] = "luksonaut";
+            
+            _mint(msg.sender, tokenId, true, "");
+            tokenIds[i] = tokenId;
+            
+            // Update price for next iteration
+            price = (price * curve) / 1000;
+        }
+        
+        // Send funds to recipient
+        (bool success, ) = recipient.call{ value: msg.value }("");
+        require(success, "could not send");
+        
+        return tokenIds;
     }
 
     // Keeping the original mintLoogie for backwards compatibility
@@ -105,13 +171,89 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
         mouthLength[tokenId] =
             180 + ((uint256(chubbiness[tokenId] / 4) * uint256(uint8(predictableRandom[4]))) / 255);
 
+        // Set default UP username
+        upUsernames[tokenId] = "luksonaut";
+
         _mint(to, tokenId, true, "");
         return tokenId;
+    }
+
+    // Add function to set UP username for a token
+    function setUPUsername(bytes32 tokenId, string memory username) public {
+        require(tokenOwnerOf(tokenId) == msg.sender, "LSP8: Not the token owner");
+        upUsernames[tokenId] = username;
     }
 
     // Helper function to check if a token exists by its uint256 ID
     function tokenExists(uint256 id) public view returns (bool) {
         return _tokenIdExists[id];
+    }
+
+    // Import legacy tokens from previous contract deployment
+    function importLegacyTokens(uint256[] calldata tokenIds, address[] calldata owners, bytes3[] calldata tokenColors, uint256[] calldata tokenChubbiness, uint256[] calldata tokenMouthLength, string[] calldata tokenUsernames) public {
+        require(msg.sender == owner(), "LSP8: Caller is not the contract owner");
+        require(tokenIds.length == owners.length && tokenIds.length == tokenColors.length && tokenIds.length == tokenChubbiness.length && tokenIds.length == tokenMouthLength.length && tokenIds.length == tokenUsernames.length, "LSP8: Array lengths mismatch");
+        
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+            bytes32 tokenIdBytes = bytes32(tokenId);
+            
+            // Skip if token already exists in this contract
+            if (_tokenIdExists[tokenId]) continue;
+            
+            // Record this token ID
+            _tokenIdExists[tokenId] = true;
+            
+            // Record token metadata
+            color[tokenIdBytes] = tokenColors[i];
+            chubbiness[tokenIdBytes] = tokenChubbiness[i];
+            mouthLength[tokenIdBytes] = tokenMouthLength[i];
+            upUsernames[tokenIdBytes] = tokenUsernames[i];
+            
+            // Update _tokenIds if this is higher than current value
+            if (tokenId > _tokenIds) {
+                _tokenIds = tokenId;
+            }
+        }
+    }
+    
+    // Simplified import for just recording token IDs and owners
+    function importLegacyTokensSimple(uint256[] calldata tokenIds, address[] calldata owners) public {
+        require(msg.sender == owner(), "LSP8: Caller is not the contract owner");
+        require(tokenIds.length == owners.length, "LSP8: Array lengths mismatch");
+        
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+            bytes32 tokenIdBytes = bytes32(tokenId);
+            
+            // Skip if token already exists in this contract
+            if (_tokenIdExists[tokenId]) continue;
+            
+            // Record this token ID
+            _tokenIdExists[tokenId] = true;
+            
+            // Record minimal default metadata
+            color[tokenIdBytes] = bytes3(0x000000);  // Default black
+            chubbiness[tokenIdBytes] = 60;  // Default value 
+            mouthLength[tokenIdBytes] = 230;  // Default value
+            upUsernames[tokenIdBytes] = "luksonaut";  // Default username
+            
+            // Update _tokenIds if this is higher than current value
+            if (tokenId > _tokenIds) {
+                _tokenIds = tokenId;
+            }
+        }
+    }
+
+    // Batch check if multiple tokens exist
+    function batchTokenExists(uint256[] memory ids) public view returns (bool[] memory) {
+        bool[] memory results = new bool[](ids.length);
+        
+        for (uint256 i = 0; i < ids.length; i++) {
+            results[i] = _tokenIdExists[ids[i]];
+        }
+        
+        return results;
     }
 
     // Get all existing token IDs up to the current total supply
@@ -121,6 +263,42 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
         uint256 resultIndex = 0;
         
         for (uint256 i = 1; i <= totalCount; i++) {
+            if (_tokenIdExists[i]) {
+                result[resultIndex] = i;
+                resultIndex++;
+            }
+        }
+        
+        return result;
+    }
+
+    // Get token IDs with pagination support
+    function getTokenIdsPaginated(uint256 offset, uint256 limit) public view returns (uint256[] memory) {
+        uint256 totalCount = _tokenIds;
+        
+        // Adjust limit if it exceeds the available tokens
+        if (offset >= totalCount) {
+            return new uint256[](0);
+        }
+        
+        uint256 endIndex = offset + limit;
+        if (endIndex > totalCount) {
+            endIndex = totalCount;
+        }
+        
+        uint256 resultLength = 0;
+        // First count how many existing tokens are in the range
+        for (uint256 i = offset + 1; i <= endIndex; i++) {
+            if (_tokenIdExists[i]) {
+                resultLength++;
+            }
+        }
+        
+        // Then create and fill the result array
+        uint256[] memory result = new uint256[](resultLength);
+        uint256 resultIndex = 0;
+        
+        for (uint256 i = offset + 1; i <= endIndex; i++) {
             if (_tokenIdExists[i]) {
                 result[resultIndex] = i;
                 resultIndex++;
@@ -163,7 +341,9 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
                             uint2str(chubbiness[tokenId]),
                             '},{"trait_type": "mouthLength", "value": ',
                             uint2str(mouthLength[tokenId]),
-                            '}], "owner":"',
+                            '},{"trait_type": "upUsername", "value": "',
+                            upUsernames[tokenId],
+                            '"}], "owner":"',
                             HexStrings.toHexString(uint256(uint160(tokenOwnerOf(tokenId))), 20),
                             '", "image": "data:image/svg+xml;base64,',
                             image,
@@ -179,6 +359,16 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
         string memory svg = string(
             abi.encodePacked(
                 '<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">',
+                // Add the Comic Sans font definition to the SVG
+                '<defs>',
+                '<style>',
+                '@font-face {',
+                'font-family: "Comic Sans MS";',
+                'src: url("https://fonts.cdnfonts.com/css/comic-sans");',
+                '}',
+                '.username { font-family: "Comic Sans MS", cursive; font-size: 16px; }',
+                '</style>',
+                '</defs>',
                 renderTokenById(tokenId),
                 "</svg>"
             )
@@ -210,7 +400,11 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
                 '<path d="M 130 240 Q 165 250 ',
                 uint2str(mouthLength[tokenId]),
                 ' 235" stroke="black" stroke-width="3" fill="transparent"/>',
-                "</g>"
+                "</g>",
+                // Add the UP username in Comic Sans
+                '<text x="200" y="300" text-anchor="middle" class="username" fill="black">',
+                bytes(upUsernames[tokenId]).length > 0 ? upUsernames[tokenId] : "luksonaut",
+                '</text>'
             )
         );
         return render;

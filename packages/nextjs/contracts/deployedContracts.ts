@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     LSP8Loogies: {
-      address: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
+      address: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
       abi: [
         {
           inputs: [
@@ -536,6 +536,44 @@ const deployedContracts = {
         {
           inputs: [
             {
+              internalType: "uint256",
+              name: "count",
+              type: "uint256",
+            },
+          ],
+          name: "batchMintItems",
+          outputs: [
+            {
+              internalType: "bytes32[]",
+              name: "",
+              type: "bytes32[]",
+            },
+          ],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256[]",
+              name: "ids",
+              type: "uint256[]",
+            },
+          ],
+          name: "batchTokenExists",
+          outputs: [
+            {
+              internalType: "bool[]",
+              name: "",
+              type: "bool[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
               internalType: "bytes32",
               name: "",
               type: "bytes32",
@@ -700,6 +738,86 @@ const deployedContracts = {
             },
           ],
           stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "offset",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "limit",
+              type: "uint256",
+            },
+          ],
+          name: "getTokenIdsPaginated",
+          outputs: [
+            {
+              internalType: "uint256[]",
+              name: "",
+              type: "uint256[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256[]",
+              name: "tokenIds",
+              type: "uint256[]",
+            },
+            {
+              internalType: "address[]",
+              name: "owners",
+              type: "address[]",
+            },
+            {
+              internalType: "bytes3[]",
+              name: "tokenColors",
+              type: "bytes3[]",
+            },
+            {
+              internalType: "uint256[]",
+              name: "tokenChubbiness",
+              type: "uint256[]",
+            },
+            {
+              internalType: "uint256[]",
+              name: "tokenMouthLength",
+              type: "uint256[]",
+            },
+            {
+              internalType: "string[]",
+              name: "tokenUsernames",
+              type: "string[]",
+            },
+          ],
+          name: "importLegacyTokens",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256[]",
+              name: "tokenIds",
+              type: "uint256[]",
+            },
+            {
+              internalType: "address[]",
+              name: "owners",
+              type: "address[]",
+            },
+          ],
+          name: "importLegacyTokensSimple",
+          outputs: [],
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
@@ -968,6 +1086,24 @@ const deployedContracts = {
         {
           inputs: [
             {
+              internalType: "bytes32",
+              name: "tokenId",
+              type: "bytes32",
+            },
+            {
+              internalType: "string",
+              name: "username",
+              type: "string",
+            },
+          ],
+          name: "setUPUsername",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
               internalType: "bytes4",
               name: "interfaceId",
               type: "bytes4",
@@ -1150,6 +1286,25 @@ const deployedContracts = {
           name: "transferOwnership",
           outputs: [],
           stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+          ],
+          name: "upUsernames",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
           type: "function",
         },
         {

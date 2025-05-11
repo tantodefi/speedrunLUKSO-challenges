@@ -10,6 +10,7 @@ import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaf
 import { notification } from "~~/utils/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
+import { StyledSelect } from "~~/components/styled/StyledSelect";
 
 const LSP8Loogies: NextPage = () => {
   const { address: connectedAddress } = useAccount();
@@ -20,6 +21,8 @@ const LSP8Loogies: NextPage = () => {
   const [loadingLoogies, setLoadingLoogies] = useState(true);
   const [isMinting, setIsMinting] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [mintCount, setMintCount] = useState(1);
+  const [estimatedPrice, setEstimatedPrice] = useState<bigint | null>(null);
   const perPage = 12n;
   const publicClient = usePublicClient();
 
@@ -39,11 +42,41 @@ const LSP8Loogies: NextPage = () => {
   });
 
   // Direct contract write without using the scaffold helper
-  const { writeAsync } = useContractWrite({
+  const { writeAsync: mintOneAsync } = useContractWrite({
     address: deployedContractData?.address,
     abi: deployedContractData?.abi,
     functionName: "mintItem",
   });
+  
+  // Direct contract write for batch minting
+  const { writeAsync: batchMintAsync } = useContractWrite({
+    address: deployedContractData?.address,
+    abi: deployedContractData?.abi,
+    functionName: "batchMintItems",
+  });
+
+  // Direct contract write for setting username
+  const { writeAsync: setUsernameAsync } = useContractWrite({
+    address: deployedContractData?.address,
+    abi: deployedContractData?.abi,
+    functionName: "setUPUsername",
+  });
+
+  // Calculate estimated price for batch minting
+  useEffect(() => {
+    if (!price) return;
+    
+    let totalPrice = 0n;
+    let currentPrice = price;
+    const curve = 1002n; // 0.2% increase per mint, matches contract
+    
+    for (let i = 0; i < mintCount; i++) {
+      totalPrice += currentPrice;
+      currentPrice = (currentPrice * curve) / 1000n;
+    }
+    
+    setEstimatedPrice(totalPrice);
+  }, [price, mintCount]);
 
   // Handle minting
   const handleMint = async () => {
@@ -71,27 +104,44 @@ const LSP8Loogies: NextPage = () => {
 
     try {
       setIsMinting(true);
-      console.log("Attempting to mint LSP8Loogies with direct contract interaction");
-      console.log("Current price:", formatEther(price), "ETH");
       
-      // Use direct contract interaction with the current price
-      if (writeAsync) {
-        // Refresh price before mint to ensure we have the latest
-        await refetchPrice();
-
-        const tx = await writeAsync({
+      // Refresh price before mint to ensure we have the latest
+      await refetchPrice();
+      
+      if (mintCount === 1) {
+        // Single mint
+        console.log("Attempting to mint a single LSP8Loogie with direct contract interaction");
+        console.log("Current price:", formatEther(price), "ETH");
+        
+        const tx = await mintOneAsync({
           value: price,
         });
         console.log("LSP8Loogies mint transaction:", tx.hash);
         notification.success("Successfully minted a new LSP8 Loogie!");
-        
-        // Trigger a refresh of the data and price
-        await Promise.all([refetchTotalSupply(), refetchPrice()]);
-        console.log("Updated price after mint:", price ? formatEther(price) : "unknown");
-        setRefreshTrigger(prev => prev + 1);
       } else {
-        notification.error("Contract interaction not available");
+        // Batch mint
+        console.log(`Attempting to batch mint ${mintCount} LSP8Loogies`);
+        
+        if (!estimatedPrice) {
+          notification.error("Estimated price not available");
+          return;
+        }
+        
+        console.log("Estimated total price:", formatEther(estimatedPrice), "ETH");
+        
+        const tx = await batchMintAsync({
+          args: [mintCount],
+          value: estimatedPrice,
+        });
+        
+        console.log("LSP8Loogies batch mint transaction:", tx.hash);
+        notification.success(`Successfully minted ${mintCount} new LSP8 Loogies!`);
       }
+      
+      // Trigger a refresh of the data and price
+      await Promise.all([refetchTotalSupply(), refetchPrice()]);
+      console.log("Updated price after mint:", price ? formatEther(price) : "unknown");
+      setRefreshTrigger(prev => prev + 1);
     } catch (e: any) {
       console.error("Minting error:", e);
       
@@ -114,86 +164,134 @@ const LSP8Loogies: NextPage = () => {
     
     const fetchTokenIds = async () => {
       try {
-        // Use the getAllTokenIds function to get the list of existing token IDs
-        let allTokens: bigint[] = [];
+        // Try using the paginated token ID function first
+        let pageTokens: bigint[] = [];
+        
         try {
-          const getAllTokensPromise = publicClient.readContract({
+          const offset = (Number(page) - 1) * Number(perPage);
+          const pageSize = Number(perPage);
+          
+          const getPaginatedTokensPromise = publicClient.readContract({
             address: deployedContractData.address as `0x${string}`,
             abi: deployedContractData.abi,
-            functionName: 'getAllTokenIds',
+            functionName: 'getTokenIdsPaginated',
+            args: [offset, pageSize],
           });
           
           // Add a timeout to prevent hanging
           const timeoutPromise = new Promise<never>((_, reject) => 
-            setTimeout(() => reject(new Error("Timeout getting all token IDs")), 3000)
+            setTimeout(() => reject(new Error("Timeout getting paginated token IDs")), 3000)
           );
           
           // Race the promises
-          const result = await Promise.race([getAllTokensPromise, timeoutPromise]);
-          allTokens = result as bigint[];
-        } catch (error) {
-          console.log("getAllTokenIds function not available yet, falling back to manual check");
-          // If the function doesn't exist (contract not redeployed yet), fall back to limited check
+          const result = await Promise.race([getPaginatedTokensPromise, timeoutPromise]);
+          pageTokens = result as bigint[];
+        } catch (paginationError) {
+          console.log("getTokenIdsPaginated function not available, trying getAllTokenIds");
           
-          // Only check a reasonable number of potential tokens to avoid excessive calls
-          const potentialIds: bigint[] = [];
-          const totalSupplyNum = Number(totalSupply);
-          const maxToCheck = Math.min(totalSupplyNum, 25); // Limit to 25 tokens to check
-          
-          for (let i = 1; i <= maxToCheck; i++) {
-            potentialIds.push(BigInt(i));
-          }
-          
-          // Check which ones exist with batched promises
-          const checkPromises = potentialIds.map(async (id) => {
+          // Use the getAllTokenIds function to get the list of existing token IDs
+          try {
+            const getAllTokensPromise = publicClient.readContract({
+              address: deployedContractData.address as `0x${string}`,
+              abi: deployedContractData.abi,
+              functionName: 'getAllTokenIds',
+            });
+            
+            // Add a timeout to prevent hanging
+            const timeoutPromise = new Promise<never>((_, reject) => 
+              setTimeout(() => reject(new Error("Timeout getting all token IDs")), 3000)
+            );
+            
+            // Race the promises
+            const result = await Promise.race([getAllTokensPromise, timeoutPromise]);
+            const allTokens = result as bigint[];
+            
+            // Filter tokens to get the current page
+            const tokensArray = Array.isArray(allTokens) ? allTokens : [];
+            const startIndex = (Number(page) - 1) * Number(perPage);
+            const endIndex = Math.min(startIndex + Number(perPage), tokensArray.length);
+            
+            // Get tokens for the current page (reverse order to show newest first)
+            pageTokens = tokensArray.slice(startIndex, endIndex).reverse();
+          } catch (error) {
+            console.log("getAllTokenIds function not available yet, falling back to manual check");
+            // If the function doesn't exist (contract not redeployed yet), fall back to limited check
+            
+            // Only check a reasonable number of potential tokens to avoid excessive calls
+            const potentialIds: bigint[] = [];
+            const totalSupplyNum = Number(totalSupply);
+            const maxToCheck = Math.min(totalSupplyNum, 25); // Limit to 25 tokens to check
+            
+            for (let i = 1; i <= maxToCheck; i++) {
+              potentialIds.push(BigInt(i));
+            }
+            
+            // Check which ones exist with batch function if available
             try {
-              const tokenIdHex = `0x${id.toString().padStart(64, '0')}`;
-              const checkPromise = publicClient.readContract({
+              const batchCheckPromise = publicClient.readContract({
                 address: deployedContractData.address as `0x${string}`,
                 abi: deployedContractData.abi,
-                functionName: 'tokenOwnerOf',
-                args: [tokenIdHex],
+                functionName: 'batchTokenExists',
+                args: [potentialIds],
               });
               
               // Add a timeout to prevent hanging
               const timeoutPromise = new Promise<never>((_, reject) => 
-                setTimeout(() => reject(new Error(`Timeout checking token ${id}`)), 1000)
+                setTimeout(() => reject(new Error("Timeout on batch token check")), 3000)
               );
               
               // Race the promises
-              await Promise.race([checkPromise, timeoutPromise]);
-              return id;
-            } catch (error) {
-              return null;
-            }
-          });
-          
-          // Execute all checks with a timeout
-          const checkPromise = Promise.all(checkPromises);
-          const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("Timeout on batch token check")), 5000)
-          );
-          
-          try {
-            const results = await Promise.race([checkPromise, timeoutPromise]);
-            allTokens = results.filter((id): id is bigint => id !== null);
-          } catch (timeoutError) {
-            console.log("Batch token check timed out, using limited results");
-            // Just use the latest few tokens as a fallback
-            const count = Number(totalSupply);
-            for (let i = 1; i <= Math.min(count, 5); i++) {
-              allTokens.push(BigInt(i));
+              const batchResults = await Promise.race([batchCheckPromise, timeoutPromise]) as boolean[];
+              
+              // Filter to get only existing tokens
+              pageTokens = potentialIds.filter((id, index) => batchResults[index]);
+            } catch (batchError) {
+              console.log("batchTokenExists not available, falling back to individual checks");
+              
+              // Check which ones exist with batched promises
+              const checkPromises = potentialIds.map(async (id) => {
+                try {
+                  const tokenIdHex = `0x${id.toString().padStart(64, '0')}`;
+                  const checkPromise = publicClient.readContract({
+                    address: deployedContractData.address as `0x${string}`,
+                    abi: deployedContractData.abi,
+                    functionName: 'tokenOwnerOf',
+                    args: [tokenIdHex],
+                  });
+                  
+                  // Add a timeout to prevent hanging
+                  const timeoutPromise = new Promise<never>((_, reject) => 
+                    setTimeout(() => reject(new Error(`Timeout checking token ${id}`)), 1000)
+                  );
+                  
+                  // Race the promises
+                  await Promise.race([checkPromise, timeoutPromise]);
+                  return id;
+                } catch (error) {
+                  return null;
+                }
+              });
+              
+              // Execute all checks with a timeout
+              const checkPromise = Promise.all(checkPromises);
+              const timeoutPromise = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error("Timeout on batch token check")), 5000)
+              );
+              
+              try {
+                const results = await Promise.race([checkPromise, timeoutPromise]);
+                pageTokens = results.filter((id): id is bigint => id !== null);
+              } catch (timeoutError) {
+                console.log("Batch token check timed out, using limited results");
+                // Just use the latest few tokens as a fallback
+                const count = Number(totalSupply);
+                for (let i = 1; i <= Math.min(count, 5); i++) {
+                  pageTokens.push(BigInt(i));
+                }
+              }
             }
           }
         }
-        
-        // Filter tokens to get the current page
-        const tokensArray = Array.isArray(allTokens) ? allTokens : [];
-        const startIndex = (Number(page) - 1) * Number(perPage);
-        const endIndex = Math.min(startIndex + Number(perPage), tokensArray.length);
-        
-        // Get tokens for the current page (reverse order to show newest first)
-        const pageTokens = tokensArray.slice(startIndex, endIndex).reverse();
         
         // Convert to bytes32 format for LSP8
         return pageTokens.map(id => `0x${id.toString().padStart(64, '0')}`);
@@ -417,26 +515,82 @@ const LSP8Loogies: NextPage = () => {
               </a>
             </div>
           </div>
-          <div className="flex flex-col justify-center items-center mt-6 space-x-2">
-            <button
-              onClick={handleMint}
-              className="btn btn-primary"
-              disabled={!connectedAddress || !price || isMinting}
-            >
-              {isMinting ? (
-                <>
-                  <span className="loading loading-spinner loading-xs"></span>
-                  Minting...
-                </>
-              ) : (
-                <>Mint Now for {price ? (+formatEther(price)).toFixed(6) : "-"} ETH</>
-              )}
-            </button>
-            <div className="flex gap-2 mt-3">
-              <p>{Number(3728n - (totalSupply || 0n))} Loogies left</p>
-              <button onClick={refreshData} className="btn btn-xs btn-outline">
-                Refresh
-              </button>
+          <div className="flex flex-col justify-center items-center mt-6 mb-8">
+            <div className="card bg-base-100 shadow-md p-4 max-w-md w-full border border-base-300">
+              <div className="card-body p-2">
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium">Mint count:</label>
+                      <div className="dropdown dropdown-right">
+                        <label 
+                          tabIndex={0} 
+                          className={`w-24 btn btn-sm bg-base-100 border border-base-300 hover:border-primary ${isMinting ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
+                          <span className="font-normal">{mintCount}</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </label>
+                        <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow-lg bg-base-100 rounded-box w-24 mt-1">
+                          {[1, 2, 3, 5, 10].map(count => (
+                            <li key={count}>
+                              <button
+                                type="button"
+                                disabled={isMinting}
+                                className={`${count === mintCount ? "bg-base-200 font-medium" : ""} ${isMinting ? "cursor-not-allowed" : "hover:bg-base-200"}`}
+                                onClick={() => {
+                                  if (!isMinting) {
+                                    setMintCount(count);
+                                    // Find the dropdown element and remove its tabIndex focus
+                                    const dropdownElement = document.querySelector('.dropdown label[tabIndex="0"]') as HTMLElement | null;
+                                    if (dropdownElement) {
+                                      dropdownElement.blur();
+                                    }
+                                  }
+                                }}
+                              >
+                                {count}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium">Price: <span className="font-bold">{estimatedPrice ? (+formatEther(estimatedPrice)).toFixed(6) : "-"} ETH</span></span>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={handleMint}
+                    className="btn btn-primary w-full"
+                    disabled={!connectedAddress || !price || isMinting}
+                  >
+                    {isMinting ? (
+                      <>
+                        <span className="loading loading-spinner loading-xs"></span>
+                        Minting...
+                      </>
+                    ) : (
+                      <>
+                        Mint {mintCount > 1 ? `${mintCount} Loogies` : 'Loogie Now'}
+                      </>
+                    )}
+                  </button>
+                  
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="badge badge-neutral">{Number(3728n - (totalSupply || 0n))} Loogies left</div>
+                    <button onClick={refreshData} className="btn btn-xs btn-ghost">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -485,24 +639,81 @@ const LSP8Loogies: NextPage = () => {
                             <div 
                               dangerouslySetInnerHTML={{ __html: loogie.svgContent }}
                               style={{ width: '300px', height: '300px' }}
+                              className="rounded-lg overflow-hidden bg-base-200"
                             />
                           ) : (
-                            <Image src="/loogie.svg" alt={loogie.name} width="300" height="300" />
+                            <div className="rounded-lg overflow-hidden bg-base-200 p-2">
+                              <Image src="/loogie.svg" alt={loogie.name} width="300" height="300" />
+                            </div>
                           )}
                         </div>
-                        <p className="mb-2">{loogie.description}</p>
-                        <div className="mt-2">
-                          <span className="text-sm font-semibold">Owner:</span>
-                          <Address address={loogie.owner} />
+                        <p className="mb-2 text-sm">{loogie.description}</p>
+                        <div className="mt-2 w-full">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold">Owner:</span>
+                            <Address address={loogie.owner} />
+                          </div>
                         </div>
-                        {loogie.attributes && (
-                          <div className="mt-2 text-sm">
-                            {loogie.attributes.map((attr: any, idx: number) => (
-                              <div key={idx} className="flex justify-between gap-2">
-                                <span className="font-semibold">{attr.trait_type}:</span>
-                                <span>{attr.value}</span>
+                        {/* UP Username section - only visible to token owner */}
+                        {loogie.owner && connectedAddress && loogie.owner.toLowerCase() === connectedAddress.toLowerCase() && (
+                          <div className="mt-4 w-full border-t pt-4">
+                            <span className="text-sm font-semibold block mb-2">Set UP Username:</span>
+                            <form 
+                              className="flex gap-2" 
+                              onSubmit={async (e) => {
+                                e.preventDefault();
+                                const form = e.target as HTMLFormElement;
+                                const input = form.elements.namedItem('username') as HTMLInputElement;
+                                const username = input.value;
+                                
+                                if (!username || username.trim() === '') return;
+                                try {
+                                  if (!deployedContractData?.address) return;
+                                  
+                                  // Call the contract to set the username
+                                  const writeResult = await setUsernameAsync({
+                                    args: [loogie.id, username],
+                                  });
+                                  
+                                  notification.success("Username updated! Refresh to see changes.");
+                                  console.log("Updated username:", writeResult);
+                                  
+                                  // Reset the form
+                                  form.reset();
+                                  
+                                  // Refresh after a short delay
+                                  setTimeout(() => {
+                                    setRefreshTrigger(prev => prev + 1);
+                                  }, 3000);
+                                } catch (error) {
+                                  console.error("Error setting username:", error);
+                                  notification.error("Failed to update username");
+                                }
+                              }}
+                            >
+                              <div className="join w-full">
+                                <input 
+                                  type="text" 
+                                  name="username"
+                                  placeholder={loogie.attributes?.find((attr: any) => attr.trait_type === 'upUsername')?.value || "luksonaut"}
+                                  className="input input-bordered join-item flex-grow" 
+                                />
+                                <button type="submit" className="btn btn-primary join-item">Update</button>
                               </div>
-                            ))}
+                            </form>
+                          </div>
+                        )}
+                        {loogie.attributes && (
+                          <div className="mt-2 text-sm w-full border-t pt-2">
+                            <h3 className="font-medium mb-1 text-left">Attributes:</h3>
+                            <div className="grid grid-cols-2 gap-x-1 gap-y-2">
+                              {loogie.attributes.map((attr: any, idx: number) => (
+                                <div key={idx} className="flex items-center justify-between bg-base-200 rounded-lg px-2 py-1">
+                                  <span className="font-semibold">{attr.trait_type}:</span>
+                                  <span className="ml-1 truncate">{attr.value}</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
