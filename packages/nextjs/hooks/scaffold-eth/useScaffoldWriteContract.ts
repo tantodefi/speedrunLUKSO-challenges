@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTargetNetwork } from "./useTargetNetwork";
 import { MutateOptions } from "@tanstack/react-query";
 import { Abi, ExtractAbiFunctionNames } from "abitype";
-import { useAccount, useContractWrite } from "wagmi";
+import { useAccount, useChainId, useContractWrite } from "wagmi";
 import { useDeployedContractInfo, useTransactor } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 import {
@@ -34,7 +34,8 @@ export const useScaffoldWriteContract = <
     chainId?: number;
   }
 ) => {
-  const { chainId } = useAccount();
+  const { address } = useAccount();
+  const chainId = useChainId();
   const writeTx = useTransactor();
   const [isMining, setIsMining] = useState(false);
   const { targetNetwork } = useTargetNetwork();
@@ -60,23 +61,52 @@ export const useScaffoldWriteContract = <
       return;
     }
 
-    if (!chainId) {
+    const isBurnerWalletOnLocalNetwork = !chainId && !!address && targetNetwork.id === 31337;
+
+    if (!chainId && !isBurnerWalletOnLocalNetwork) {
       notification.error("Please connect your wallet");
       return;
     }
-    if (chainId !== targetNetwork.id) {
+
+    if (chainId && chainId !== targetNetwork.id && !isBurnerWalletOnLocalNetwork) {
       notification.error("You are on the wrong network");
+      return;
+    }
+
+    // Ensure functionName is provided
+    if (!variables.functionName) {
+      notification.error("Function name is required for contract interaction");
+      console.error("Missing functionName in contract call:", { contractName, variables });
       return;
     }
 
     try {
       setIsMining(true);
       const { blockConfirmations, onBlockConfirmation, ...mutateOptions } = options || {};
-      const makeWriteWithParams = () => wagmiContractWrite.writeAsync?.();
+      
+      // Ensure consistent data between hook initialization and write
+      const finalFunctionName = variables.functionName || functionName;
+      
+      if (!finalFunctionName) {
+        throw new Error(`Function name is required. Neither the hook initialization nor the writeContract call provided a function name.`);
+      }
+      
+      console.log(`Executing contract write for ${String(contractName)}.${String(finalFunctionName)}`);
+      
+      const makeWriteWithParams = async () => {
+        if (!wagmiContractWrite.writeAsync) {
+          throw new Error("writeAsync function is not available");
+        }
+        
+        const result = await wagmiContractWrite.writeAsync();
+        return result?.hash as `0x${string}`;
+      };
+      
       const writeTxResult = await writeTx(makeWriteWithParams, { blockConfirmations, onBlockConfirmation });
 
       return writeTxResult;
     } catch (e: any) {
+      console.error(`Error in contract write to ${String(contractName)}:`, e);
       throw e;
     } finally {
       setIsMining(false);
@@ -94,12 +124,23 @@ export const useScaffoldWriteContract = <
       notification.error("Target Contract is not deployed, did you forget to run `yarn deploy`?");
       return;
     }
-    if (!chainId) {
+
+    const isBurnerWalletOnLocalNetwork = !chainId && !!address && targetNetwork.id === 31337;
+
+    if (!chainId && !isBurnerWalletOnLocalNetwork) {
       notification.error("Please connect your wallet");
       return;
     }
-    if (chainId !== targetNetwork.id) {
+    
+    if (chainId && chainId !== targetNetwork.id && !isBurnerWalletOnLocalNetwork) {
       notification.error("You are on the wrong network");
+      return;
+    }
+    
+    // Ensure functionName is provided
+    if (!variables.functionName) {
+      notification.error("Function name is required for contract interaction");
+      console.error("Missing functionName in contract call:", { contractName, variables });
       return;
     }
 

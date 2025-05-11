@@ -4,62 +4,140 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import type { NextPage } from "next";
 import { formatEther } from "viem";
-import { useAccount } from "wagmi";
+import { useAccount, useChainId, useContractWrite } from "wagmi";
 import { Address } from "~~/components/scaffold-eth";
 import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { notification } from "~~/utils/scaffold-eth";
+import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
+import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 
 const LSP8Loogies: NextPage = () => {
   const { address: connectedAddress } = useAccount();
+  const chainId = useChainId();
+  const { targetNetwork } = useTargetNetwork();
   const [allLoogies, setAllLoogies] = useState<any[]>([]);
   const [page, setPage] = useState(1n);
   const [loadingLoogies, setLoadingLoogies] = useState(true);
+  const [isMinting, setIsMinting] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const perPage = 12n;
 
+  // Get the contract information
+  const { data: deployedContractData } = useDeployedContractInfo("LSP8Loogies");
+
   // Get the price
-  const { data: price } = useScaffoldReadContract({
+  const { data: price, refetch: refetchPrice } = useScaffoldReadContract({
     contractName: "LSP8Loogies",
     functionName: "price",
   });
 
   // Get the total supply
-  const { data: totalSupply } = useScaffoldReadContract({
+  const { data: totalSupply, refetch: refetchTotalSupply } = useScaffoldReadContract({
     contractName: "LSP8Loogies",
     functionName: "totalSupply",
+  });
+
+  // Direct contract write without using the scaffold helper
+  const { writeAsync } = useContractWrite({
+    address: deployedContractData?.address,
+    abi: deployedContractData?.abi,
+    functionName: "mintItem",
   });
 
   // Handle minting
   const { writeContractAsync } = useScaffoldWriteContract("LSP8Loogies");
 
-  // Generate array of token IDs for the current page
-  const tokenIds = useState(() => {
-    if (!totalSupply) return [];
-    
-    const tokens = [];
-    const startIndex = Number(totalSupply) - Number(perPage) * (Number(page) - 1);
-    const endIndex = Math.max(startIndex - Number(perPage), 0);
-    
-    for (let i = startIndex; i > endIndex && i > 0; i--) {
-      // Convert to bytes32 format for LSP8
-      tokens.push(`0x${i.toString().padStart(64, '0')}`);
+  const handleMint = async () => {
+    if (!connectedAddress) {
+      notification.error("Please connect your wallet");
+      return;
     }
-    
-    return tokens;
-  })[0];
 
-  // Effect to load tokens when totalSupply or page changes
+    if (!deployedContractData?.address) {
+      notification.error("Contract data not available");
+      return;
+    }
+
+    const isLocalBurnerWallet = !chainId && !!connectedAddress && targetNetwork.id === 31337;
+
+    if (chainId && chainId !== targetNetwork.id && !isLocalBurnerWallet) {
+      notification.error("You are on the wrong network");
+      return;
+    }
+
+    if (!price) {
+      notification.error("Price not available");
+      return;
+    }
+
+    try {
+      setIsMinting(true);
+      console.log("Attempting to mint LSP8Loogies with direct contract interaction");
+      console.log("Current price:", formatEther(price), "ETH");
+      
+      // Use direct contract interaction with the current price
+      if (writeAsync) {
+        // Refresh price before mint to ensure we have the latest
+        await refetchPrice();
+
+        const tx = await writeAsync({
+          value: price,
+        });
+        console.log("LSP8Loogies mint transaction:", tx.hash);
+        notification.success("Successfully minted a new LSP8 Loogie!");
+        
+        // Trigger a refresh of the data and price
+        await Promise.all([refetchTotalSupply(), refetchPrice()]);
+        console.log("Updated price after mint:", price ? formatEther(price) : "unknown");
+        setRefreshTrigger(prev => prev + 1);
+      } else {
+        notification.error("Contract interaction not available");
+      }
+    } catch (e: any) {
+      console.error("Minting error:", e);
+      
+      // Check if the error is "NOT ENOUGH" and provide a helpful message
+      const errorMessage = e.toString();
+      if (errorMessage.includes("NOT ENOUGH")) {
+        notification.error("Price has increased. Please try again with the updated price.");
+        await refetchPrice();
+      } else {
+        notification.error("Failed to mint Loogie. See console for details.");
+      }
+    } finally {
+      setIsMinting(false);
+    }
+  };
+
+  // Generate array of token IDs for the current page
   useEffect(() => {
+    if (!totalSupply) return;
+    
+    const generateTokenIds = () => {
+      const tokens = [];
+      const startIndex = Number(totalSupply) - Number(perPage) * (Number(page) - 1);
+      const endIndex = Math.max(startIndex - Number(perPage), 0);
+      
+      for (let i = startIndex; i > endIndex && i > 0; i--) {
+        // Convert to bytes32 format for LSP8
+        tokens.push(`0x${i.toString().padStart(64, '0')}`);
+      }
+      
+      return tokens;
+    };
+    
+    const tokenIds = generateTokenIds();
+    console.log("Generated token IDs:", tokenIds);
+    
+    // Effect to load tokens when totalSupply or page changes
     const loadTokens = async () => {
       if (!totalSupply) return;
       
       setLoadingLoogies(true);
       setAllLoogies([]);
       
-      // We'll use fetch directly to call the contract
-      // This is just a placeholder - actual implementation would depend on
-      // your backend API or how you integrate with the blockchain
       try {
-        // In a real implementation, you'd make calls to your contract
-        // through a JSON-RPC provider or a service like Infura/Alchemy
+        console.log("Loading tokens for page", page.toString());
         
         // For demo purposes, we'll just set some placeholder data
         const newLoogies = tokenIds.map((id, index) => {
@@ -82,11 +160,17 @@ const LSP8Loogies: NextPage = () => {
     };
     
     loadTokens();
-  }, [totalSupply, page, tokenIds, connectedAddress]);
+  }, [totalSupply, page, connectedAddress, refreshTrigger]);
 
   // Update page when user changes it
   const handlePageChange = (newPage: bigint) => {
     setPage(newPage);
+  };
+
+  // Function to force refresh the data
+  const refreshData = async () => {
+    await refetchTotalSupply();
+    setRefreshTrigger(prev => prev + 1);
   };
 
   return (
@@ -111,31 +195,40 @@ const LSP8Loogies: NextPage = () => {
           </div>
           <div className="flex flex-col justify-center items-center mt-6 space-x-2">
             <button
-              onClick={async () => {
-                try {
-                  await writeContractAsync({
-                    functionName: "mintItem",
-                    value: price,
-                  });
-                } catch (e) {
-                  console.error(e);
-                }
-              }}
+              onClick={handleMint}
               className="btn btn-primary"
-              disabled={!connectedAddress || !price}
+              disabled={!connectedAddress || !price || isMinting}
             >
-              Mint Now for {price ? (+formatEther(price)).toFixed(6) : "-"} ETH
+              {isMinting ? (
+                <>
+                  <span className="loading loading-spinner loading-xs"></span>
+                  Minting...
+                </>
+              ) : (
+                <>Mint Now for {price ? (+formatEther(price)).toFixed(6) : "-"} ETH</>
+              )}
             </button>
-            <p>{Number(3728n - (totalSupply || 0n))} Loogies left</p>
+            <div className="flex gap-2 mt-3">
+              <p>{Number(3728n - (totalSupply || 0n))} Loogies left</p>
+              <button onClick={refreshData} className="btn btn-xs btn-outline">
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="flex-grow bg-base-300 w-full mt-4 p-8">
           <div className="flex justify-center items-center space-x-2">
             {loadingLoogies ? (
-              <p className="my-2 font-medium">Loading...</p>
+              <div className="my-8 flex flex-col items-center">
+                <span className="loading loading-spinner loading-lg"></span>
+                <p className="mt-4 font-medium">Loading Loogies...</p>
+              </div>
             ) : !allLoogies?.length ? (
-              <p className="my-2 font-medium">No loogies minted</p>
+              <div className="my-12 flex flex-col items-center">
+                <p className="text-xl font-medium">No loogies minted yet</p>
+                <p className="mt-2">Be the first to mint a Loogie!</p>
+              </div>
             ) : (
               <div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-center">
@@ -143,12 +236,17 @@ const LSP8Loogies: NextPage = () => {
                     return (
                       <div
                         key={loogie.id}
-                        className="flex flex-col bg-base-100 p-5 text-center items-center max-w-xs rounded-3xl"
+                        className="flex flex-col bg-base-100 p-5 text-center items-center max-w-xs rounded-3xl shadow-md hover:shadow-lg transition-all"
                       >
                         <h2 className="text-xl font-bold">{loogie.name}</h2>
-                        <Image src={loogie.image} alt={loogie.name} width="300" height="300" />
-                        <p>{loogie.description}</p>
-                        <Address address={loogie.owner} />
+                        <div className="my-4">
+                          <Image src={loogie.image} alt={loogie.name} width="300" height="300" />
+                        </div>
+                        <p className="mb-2">{loogie.description}</p>
+                        <div className="mt-2">
+                          <span className="text-sm font-semibold">Owner:</span>
+                          <Address address={loogie.owner} />
+                        </div>
                       </div>
                     );
                   })}
