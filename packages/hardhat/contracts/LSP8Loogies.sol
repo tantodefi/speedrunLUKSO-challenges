@@ -5,9 +5,10 @@ import "@lukso/lsp8-contracts/contracts/LSP8IdentifiableDigitalAsset.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "@lukso/lsp2-contracts/contracts/LSP2Utils.sol";
-import "@lukso/lsp0-contracts/contracts/ILSP0ERC725Account.sol";
+import "./ILSP0ERC725Account.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
+import "./ILSP3Profile.sol";
 
 import "./HexStrings.sol";
 import "./ToColor.sol";
@@ -185,8 +186,45 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
 
     // Add function to set UP username for a token
     function setUPUsername(bytes32 tokenId, string memory username) public {
-        require(tokenOwnerOf(tokenId) == msg.sender, "LSP8: Not the token owner");
+        address tokenOwner = tokenOwnerOf(tokenId);
+        require(tokenOwner == msg.sender || 
+                (isUniversalProfile(tokenOwner) && isControllerOf(tokenOwner, msg.sender)), 
+                "LSP8: Not authorized");
         upUsernames[tokenId] = username;
+    }
+
+    // Helper function to check if an address is a controller of a UP
+    function isControllerOf(address universalProfile, address /* controller */) internal view returns (bool) {
+        try ILSP0ERC725Account(universalProfile).isValidSignature(
+            bytes32(uint256(0x12345678)),
+            abi.encodePacked(bytes4(0x1626ba7e))
+        ) returns (bytes4) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    // Function to try to get a username from UP metadata
+    function getUPName(address upAddress) public view returns (string memory) {
+        if (!isUniversalProfile(upAddress)) {
+            return "luksonaut";
+        }
+        
+        try ILSP3Profile(upAddress).getName() returns (string memory name) {
+            if (bytes(name).length > 0) {
+                return name;
+            }
+        } catch {}
+        
+        // Try ERC725Y data fetching as fallback
+        try ILSP0ERC725Account(upAddress).getData(keccak256("LSP3Profile_Name")) returns (bytes memory data) {
+            if (data.length > 0) {
+                return string(data);
+            }
+        } catch {}
+        
+        return "luksonaut";
     }
 
     // Helper function to check if a token exists by its uint256 ID
@@ -471,6 +509,20 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
     }
 
     function renderTokenById(bytes32 tokenId) public view returns (string memory) {
+        address owner = tokenOwnerOf(tokenId);
+        string memory username;
+        
+        // If the owner is a Universal Profile, try to get the actual name from the UP
+        if (isUniversalProfile(owner)) {
+            username = getUPName(owner);
+        } else {
+            // Otherwise use the stored username or default
+            username = upUsernames[tokenId];
+            if (bytes(username).length == 0) {
+                username = "luksonaut";
+            }
+        }
+        
         string memory render = string(
             abi.encodePacked(
                 '<g id="eye1">',
@@ -497,7 +549,7 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
                 "</g>",
                 // Move the UP username a bit lower (from y=275 to y=290)
                 '<text x="200" y="290" text-anchor="middle" class="username" fill="white" stroke="black" stroke-width="0.5">',
-                bytes(upUsernames[tokenId]).length > 0 ? upUsernames[tokenId] : "luksonaut",
+                username,
                 '</text>'
             )
         );
