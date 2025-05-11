@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bars3Icon, BriefcaseIcon, BugAntIcon, FaceSmileIcon } from "@heroicons/react/24/outline";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
+import { BurnerWalletButton } from "~~/components/scaffold-eth/BurnerWalletButton";
 import { useOutsideClick } from "~~/hooks/scaffold-eth";
 
 type HeaderMenuLink = {
@@ -72,7 +73,13 @@ export const HeaderMenuLinks = () => {
  */
 export const Header = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [clientReady, setClientReady] = useState(false);
   const burgerMenuRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    setClientReady(true);
+  }, []);
+  
   useOutsideClick(
     burgerMenuRef,
     useCallback(() => setIsDrawerOpen(false), []),
@@ -116,10 +123,13 @@ export const Header = () => {
           <HeaderMenuLinks />
         </ul>
       </div>
-      <div className="navbar-end flex-grow mr-4">
-        <RainbowKitCustomConnectButton />
-        <FaucetButton />
-      </div>
+      {clientReady && (
+        <div className="navbar-end flex-grow mr-4">
+          <RainbowKitCustomConnectButton />
+          <FaucetButton />
+          <BurnerWalletButton />
+        </div>
+      )}
     </div>
   );
 };

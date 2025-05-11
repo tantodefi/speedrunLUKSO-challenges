@@ -1,5 +1,31 @@
 import * as chains from "viem/chains";
 
+// Define LUKSO testnet
+const luksoTestnet = {
+  id: 4201,
+  name: "LUKSO Testnet",
+  network: "lukso-testnet",
+  nativeCurrency: {
+    name: "LUKSO",
+    symbol: "LYXt",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://rpc.testnet.lukso.network"],
+    },
+    public: {
+      http: ["https://rpc.testnet.lukso.network"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "LUKSO Testnet Explorer",
+      url: "https://explorer.testnet.lukso.network",
+    },
+  },
+} as const;
+
 export type ScaffoldConfig = {
   targetNetworks: readonly chains.Chain[];
   pollingInterval: number;
@@ -10,7 +36,7 @@ export type ScaffoldConfig = {
 
 const scaffoldConfig = {
   // The networks on which your DApp is live
-  targetNetworks: [chains.hardhat],
+  targetNetworks: [chains.hardhat, luksoTestnet],
 
   // The interval at which your front-end polls the RPC servers for new data
   // it has no effect if you only target the local network (default is 4000)
@@ -28,8 +54,8 @@ const scaffoldConfig = {
   // .env.local for local testing, and in the Vercel/system env config for live apps.
   walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "3a8170812b534d0ff9d794f19a901d64",
 
-  // Only show the Burner Wallet when running on hardhat network
-  onlyLocalBurnerWallet: true,
+  // Allow burner wallet for all networks (not only local)
+  onlyLocalBurnerWallet: false,
 } as const satisfies ScaffoldConfig;
 
 export default scaffoldConfig;

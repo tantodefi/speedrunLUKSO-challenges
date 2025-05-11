@@ -13,6 +13,7 @@ import { ProgressBar } from "~~/components/scaffold-eth/ProgressBar";
 import { useNativeCurrencyPrice } from "~~/hooks/scaffold-eth";
 import { useGlobalState } from "~~/services/store/store";
 import { enabledChains, wagmiConfig } from "~~/services/web3/wagmiConfig";
+import "@rainbow-me/rainbowkit/styles.css";
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   const price = useNativeCurrencyPrice();
@@ -61,6 +62,9 @@ export const ScaffoldEthAppWithProviders = ({ children }: { children: React.Reac
           chains={enabledChains}
           avatar={BlockieAvatar}
           theme={mounted ? (isDarkMode ? darkTheme() : lightTheme()) : lightTheme()}
+          appInfo={{
+            appName: "LUKSO Loogies",
+          }}
         >
           <ScaffoldEthApp>{children}</ScaffoldEthApp>
         </RainbowKitProvider>

@@ -26,6 +26,11 @@ export const RainbowKitCustomConnectButton = () => {
           ? getBlockExplorerAddressLink(targetNetwork, account.address)
           : undefined;
 
+        // Return null during server-side rendering to prevent hydration mismatch
+        if (!mounted) {
+          return null;
+        }
+
         return (
           <>
             {(() => {

@@ -1,12 +1,12 @@
-import { wagmiConnectors } from "./wagmiConnectors";
 import { Chain } from "viem";
 import { configureChains, createConfig } from "wagmi";
 import { hardhat, mainnet } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 import { alchemyProvider } from "wagmi/providers/alchemy";
+import { getWalletConnectors } from "./rainbowWallets";
 import scaffoldConfig from "~~/scaffold.config";
 
-const { targetNetworks } = scaffoldConfig;
+const { targetNetworks, alchemyApiKey } = scaffoldConfig;
 
 // We always want to have mainnet enabled (ENS resolution, ETH price, etc). But only once.
 const chainArray = targetNetworks.find((network: Chain) => network.id === 1)
@@ -21,14 +21,17 @@ export const enabledChains = [...chainArray];
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   enabledChains,
   [
-    alchemyProvider({ apiKey: scaffoldConfig.alchemyApiKey }),
+    alchemyProvider({ apiKey: alchemyApiKey }),
     publicProvider(),
   ]
 );
 
+// Get custom wallet connectors including Universal Profile for LUKSO
+const connectors = getWalletConnectors(chains);
+
 export const wagmiConfig = createConfig({
   autoConnect: true,
-  connectors: wagmiConnectors,
+  connectors,
   publicClient,
   webSocketPublicClient,
 });

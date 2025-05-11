@@ -210,11 +210,6 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
         return string(bstr);
     }
 
-    // totalSupply function to match ERC721Enumerable functionality
-    function totalSupply() public view returns (uint256) {
-        return _tokenIds;
-    }
-
     // --- Required LSP8 overrides for multiple inheritance ---
     function getData(bytes32 key) public view override returns (bytes memory) {
         return super.getData(key);
