@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Address as AddressType, createWalletClient, http, parseEther } from "viem";
 import { hardhat } from "viem/chains";
-import { useAccount } from "wagmi";
+import { useAccount, useChainId } from "wagmi";
 import { BanknotesIcon } from "@heroicons/react/24/outline";
 import { Address, AddressInput, Balance, EtherInput } from "~~/components/scaffold-eth";
 import { useTransactor } from "~~/hooks/scaffold-eth";
@@ -25,12 +25,16 @@ export const Faucet = () => {
   const [inputAddress, setInputAddress] = useState<AddressType>();
   const [faucetAddress, setFaucetAddress] = useState<AddressType>();
   const [sendValue, setSendValue] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
 
-  const { chain: ConnectedChain } = useAccount();
+  const { address } = useAccount();
+  const chainId = useChainId();
 
   const faucetTxn = useTransactor(localWalletClient);
 
   useEffect(() => {
+    setIsMounted(true);
+    
     const getFaucetAddress = async () => {
       try {
         const accounts = await localWalletClient.getAddresses();
@@ -75,8 +79,8 @@ export const Faucet = () => {
     }
   };
 
-  // Render only on local chain
-  if (ConnectedChain?.id !== hardhat.id) {
+  // Don't render anything during server-side rendering or if not on local network
+  if (!isMounted || !chainId || chainId !== hardhat.id) {
     return null;
   }
 
