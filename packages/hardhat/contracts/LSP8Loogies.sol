@@ -39,8 +39,8 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
 
     uint256 public constant limit = 3728;
     uint256 public constant curve = 1002; // price increase 0,4% with each purchase
-    uint256 public price = 0.001 ether;
-    // the 1154th lukso loogies cost 0.01 LYX, the 2306th cost 0.1 LYX, the 3459th cost 1 LYX and the last ones cost 1.7 LYX
+    uint256 public price = 0.1 ether; // Increased from 0.001 to 0.1 because LYX is at $1
+    // the 1154th lukso loogies cost 1 LYX, the 2306th cost 10 LYX, the 3459th cost 100 LYX and the last ones cost 170 LYX
 
     // LSP1 Universal Receiver interface ID to detect Universal Profiles
     bytes4 constant _INTERFACEID_LSP0 = 0x3a271fff;
