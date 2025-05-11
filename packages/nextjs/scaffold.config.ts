@@ -24,6 +24,7 @@ const luksoTestnet = {
       url: "https://explorer.testnet.lukso.network",
     },
   },
+  contracts: {},
 } as const;
 
 export type ScaffoldConfig = {

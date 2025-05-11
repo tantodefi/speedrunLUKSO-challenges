@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { InheritanceTooltip } from "./InheritanceTooltip";
 import { Abi, AbiFunction } from "abitype";
 import { Address } from "viem";
-import { useContractRead } from "wagmi";
 import {
   ContractInput,
   displayTxResult,
@@ -31,24 +30,42 @@ export const ReadOnlyFunctionForm = ({
 }: ReadOnlyFunctionFormProps) => {
   const [form, setForm] = useState<Record<string, any>>(() => getInitialFormState(abiFunction));
   const [result, setResult] = useState<unknown>();
+  const [isFetching, setIsFetching] = useState(false);
   const { targetNetwork } = useTargetNetwork();
 
-  const { isFetching, refetch, error } = useContractRead({
-    address: contractAddress,
-    functionName: abiFunction.name,
-    abi: abi,
-    args: getParsedContractFunctionArgs(form),
-    chainId: targetNetwork.id,
-    enabled: false,
-    cacheTime: 0
-  });
+  const sendReadRequest = async () => {
+    setIsFetching(true);
+    setResult(undefined);
+    try {
+      const args = getParsedContractFunctionArgs(form);
+      const response = await fetch('/api/read-contract', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chainId: targetNetwork.id,
+          contractAddress,
+          abi,
+          functionName: abiFunction.name,
+          args
+        }),
+      });
 
-  useEffect(() => {
-    if (error) {
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      setResult(data.result);
+    } catch (error: any) {
       const parsedError = getParsedError(error);
       notification.error(parsedError);
+    } finally {
+      setIsFetching(false);
     }
-  }, [error]);
+  };
 
   const transformedFunction = transformAbiFunction(abiFunction);
   const inputElements = transformedFunction.inputs.map((input, inputIndex) => {
@@ -85,10 +102,7 @@ export const ReadOnlyFunctionForm = ({
         </div>
         <button
           className="btn btn-secondary btn-sm"
-          onClick={async () => {
-            const { data } = await refetch();
-            setResult(data);
-          }}
+          onClick={sendReadRequest}
           disabled={isFetching}
         >
           {isFetching && <span className="loading loading-spinner loading-xs"></span>}

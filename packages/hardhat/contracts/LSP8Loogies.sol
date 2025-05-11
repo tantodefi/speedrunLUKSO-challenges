@@ -9,6 +9,7 @@ import "./ILSP0ERC725Account.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import "./ILSP3Profile.sol";
+import "./LSP4Constants.sol";
 
 import "./HexStrings.sol";
 import "./ToColor.sol";
@@ -39,7 +40,7 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
     uint256 public constant limit = 3728;
     uint256 public constant curve = 1002; // price increase 0,4% with each purchase
     uint256 public price = 0.001 ether;
-    // the 1154th optimistic loogies cost 0.01 ETH, the 2306th cost 0.1ETH, the 3459th cost 1 ETH and the last ones cost 1.7 ETH
+    // the 1154th lukso loogies cost 0.01 LYX, the 2306th cost 0.1 LYX, the 3459th cost 1 LYX and the last ones cost 1.7 LYX
 
     // LSP1 Universal Receiver interface ID to detect Universal Profiles
     bytes4 constant _INTERFACEID_LSP0 = 0x3a271fff;
@@ -47,12 +48,27 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
     constructor(
         address contractOwner
     ) LSP8IdentifiableDigitalAsset(
-        "OptimisticLoogies", 
-        "OPLOOG", 
+        "LuksoLoogies", 
+        "LUKLOOG", 
         contractOwner, 
         1, 
         uint256(uint32(LSP8CompatPatch.LSP8_TOKENID_FORMAT_NUMBER))
     ) {}
+
+    // Add standard name() function for compatibility with ERC721 display
+    function name() public view returns (string memory) {
+        return string(getData(_LSP4_TOKEN_NAME_KEY));
+    }
+
+    // Add standard symbol() function for compatibility with ERC721 display
+    function symbol() public view returns (string memory) {
+        return string(getData(_LSP4_TOKEN_SYMBOL_KEY));
+    }
+
+    // Add totalSupply() function for compatibility with ERC721
+    function totalSupply() public view override returns (uint256) {
+        return _tokenIds;
+    }
 
     function mintItem() public payable returns (bytes32) {
         require(_tokenIds < limit, "DONE MINTING");
@@ -211,9 +227,9 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
             return "luksonaut";
         }
         
-        try ILSP3Profile(upAddress).getName() returns (string memory name) {
-            if (bytes(name).length > 0) {
-                return name;
+        try ILSP3Profile(upAddress).getName() returns (string memory profileName) {
+            if (bytes(profileName).length > 0) {
+                return profileName;
             }
         } catch {}
         
@@ -299,20 +315,19 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
         return results;
     }
 
-    // Get all existing token IDs up to the current total supply
+    // Get all token IDs that have been minted, for display compatibility
     function getAllTokenIds() public view returns (uint256[] memory) {
-        uint256 totalCount = _tokenIds;
-        uint256[] memory result = new uint256[](totalCount);
-        uint256 resultIndex = 0;
+        uint256[] memory ids = new uint256[](_tokenIds);
+        uint256 counter = 0;
         
-        for (uint256 i = 1; i <= totalCount; i++) {
+        for (uint256 i = 1; i <= _tokenIds; i++) {
             if (_tokenIdExists[i]) {
-                result[resultIndex] = i;
-                resultIndex++;
+                ids[counter] = i;
+                counter++;
             }
         }
         
-        return result;
+        return ids;
     }
 
     // Get token IDs with pagination support
@@ -353,7 +368,7 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
 
     function tokenURI(bytes32 tokenId) public view returns (string memory) {
         require(tokenOwnerOf(tokenId) != address(0), "LSP8: Token does not exist");
-        string memory name = string(abi.encodePacked("Loogie #", uint256(tokenId).toString()));
+        string memory tokenName = string(abi.encodePacked("Loogie #", uint256(tokenId).toString()));
         string memory description = string(
             abi.encodePacked(
                 "This Loogie is the color #",
@@ -373,7 +388,7 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
                     bytes(
                         abi.encodePacked(
                             '{"name":"',
-                            name,
+                            tokenName,
                             '", "description":"',
                             description,
                             '", "external_url":"https://burnyboys.com/token/',

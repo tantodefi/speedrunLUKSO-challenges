@@ -13,7 +13,7 @@ type BalanceProps = {
 };
 
 /**
- * Display (ETH & USD) balance of an ETH address.
+ * Display (LYX & USD) balance of an ETH address.
  */
 export const Balance = ({ address, className = "", usdMode }: BalanceProps) => {
   const { targetNetwork } = useTargetNetwork();

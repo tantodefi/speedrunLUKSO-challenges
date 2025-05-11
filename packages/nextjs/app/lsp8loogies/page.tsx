@@ -111,7 +111,7 @@ const LSP8Loogies: NextPage = () => {
       if (mintCount === 1) {
         // Single mint
         console.log("Attempting to mint a single LSP8Loogie with direct contract interaction");
-        console.log("Current price:", formatEther(price), "ETH");
+        console.log("Current price:", formatEther(price), "LYX");
         
         const tx = await mintOneAsync({
           value: price,
@@ -127,7 +127,7 @@ const LSP8Loogies: NextPage = () => {
           return;
         }
         
-        console.log("Estimated total price:", formatEther(estimatedPrice), "ETH");
+        console.log("Estimated total price:", formatEther(estimatedPrice), "LYX");
         
         const tx = await batchMintAsync({
           args: [mintCount],
@@ -140,7 +140,7 @@ const LSP8Loogies: NextPage = () => {
       
       // Trigger a refresh of the data and price
       await Promise.all([refetchTotalSupply(), refetchPrice()]);
-      console.log("Updated price after mint:", price ? formatEther(price) : "unknown");
+      console.log("Updated price after mint:", price ? formatEther(price) : "unknown", "LYX");
       setRefreshTrigger(prev => prev + 1);
     } catch (e: any) {
       console.error("Minting error:", e);
@@ -499,19 +499,19 @@ const LSP8Loogies: NextPage = () => {
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
         <div className="relative w-48 h-48 -m-12">
-          <Image alt="Loogie" className="cursor-pointer" fill src="/loogie.svg" />
+          <Image alt="Loogie" className="cursor-pointer" fill src="/loogie-pink.svg" />
         </div>
         <div className="px-5">
           <h1 className="text-center">
-            <span className="block text-4xl font-bold">OptimisticLoogies (LSP8)</span>
+            <span className="block text-4xl font-bold">LuksoLoogies (LSP8)</span>
             <span className="block text-2xl mt-4 mb-2">LUKSO Standard LSP8 Loogies with a smile :)</span>
           </h1>
           <div className="text-center">
-            <div>Only 3728 Optimistic Loogies available on a price curve increasing 0.2% with each new mint.</div>
+            <div>Only 3728 LuksoLoogies available on a price curve increasing 0.2% with each new mint.</div>
             <div>
               Double the supply of the{" "}
               <a className="underline" href="https://loogies.io/" target="_blank" rel="noopener noreferrer">
-                Original Ethereum Mainnet Loogies
+                Original LUKSO Mainnet Loogies
               </a>
             </div>
           </div>
@@ -559,7 +559,7 @@ const LSP8Loogies: NextPage = () => {
                     </div>
                     
                     <div className="flex items-center">
-                      <span className="text-sm font-medium">Price: <span className="font-bold">{estimatedPrice ? (+formatEther(estimatedPrice)).toFixed(6) : "-"} ETH</span></span>
+                      <span className="text-sm font-medium">Price: <span className="font-bold">{estimatedPrice ? (+formatEther(estimatedPrice)).toFixed(6) : "-"} LYX</span></span>
                     </div>
                   </div>
                   

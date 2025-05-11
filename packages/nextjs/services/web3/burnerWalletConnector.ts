@@ -2,6 +2,7 @@ import { loadBurnerSK, saveBurnerSK } from "~~/hooks/scaffold-eth/useBurnerWalle
 import { Chain, Connector, ConnectorData } from "wagmi";
 import { createWalletClient, http } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { BurnerConnector } from './BurnerConnector';
 
 export class BurnerWalletConnector extends Connector {
   readonly id = "burner-wallet";
@@ -131,4 +132,6 @@ export class BurnerWalletConnector extends Connector {
   protected onDisconnect(error: Error): void {
     this.emit("disconnect");
   }
-} 
+}
+
+export { BurnerConnector }; 
