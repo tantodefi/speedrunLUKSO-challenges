@@ -25,6 +25,11 @@ export const menuLinks: HeaderMenuLink[] = [
     icon: <FaceSmileIcon className="h-4 w-4" />,
   },
   {
+    label: "LSP8 Loogies",
+    href: "/lsp8loogies",
+    icon: <FaceSmileIcon className="h-4 w-4" />,
+  },
+  {
     label: "Your Loogies",
     href: "/your-loogies",
     icon: <BriefcaseIcon className="h-4 w-4" />,

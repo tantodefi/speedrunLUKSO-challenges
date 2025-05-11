@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { InheritanceTooltip } from "./InheritanceTooltip";
 import { Abi, AbiFunction } from "abitype";
 import { Address, TransactionReceipt } from "viem";
-import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, useContractWrite, useNetwork, useWaitForTransaction } from "wagmi";
 import {
   ContractInput,
   TxReceipt,
@@ -34,25 +34,24 @@ export const WriteOnlyFunctionForm = ({
 }: WriteOnlyFunctionFormProps) => {
   const [form, setForm] = useState<Record<string, any>>(() => getInitialFormState(abiFunction));
   const [txValue, setTxValue] = useState<string | bigint>("");
-  const { chain } = useAccount();
+  const { isConnected } = useAccount();
+  const { chain } = useNetwork();
   const writeTxn = useTransactor();
   const { targetNetwork } = useTargetNetwork();
-  const writeDisabled = !chain || chain?.id !== targetNetwork.id;
+  const writeDisabled = !isConnected || chain?.id !== targetNetwork.id;
 
-  const { data: result, isPending, writeContractAsync } = useWriteContract();
+  const { data: result, isLoading: isPending, writeAsync } = useContractWrite({
+    address: contractAddress,
+    functionName: abiFunction.name,
+    abi: abi,
+    args: getParsedContractFunctionArgs(form),
+    value: txValue ? BigInt(txValue) : undefined,
+  });
 
   const handleWrite = async () => {
-    if (writeContractAsync) {
+    if (writeAsync) {
       try {
-        const makeWriteWithParams = () =>
-          writeContractAsync({
-            address: contractAddress,
-            functionName: abiFunction.name,
-            abi: abi,
-            args: getParsedContractFunctionArgs(form),
-            value: BigInt(txValue),
-          });
-        await writeTxn(makeWriteWithParams);
+        const txResult = await writeAsync();
         onChange();
       } catch (e: any) {
         console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:handleWrite ~ error", e);
@@ -61,11 +60,11 @@ export const WriteOnlyFunctionForm = ({
   };
 
   const [displayedTxResult, setDisplayedTxResult] = useState<TransactionReceipt>();
-  const { data: txResult } = useWaitForTransactionReceipt({
-    hash: result,
+  const { data: txResult } = useWaitForTransaction({
+    hash: result?.hash,
   });
   useEffect(() => {
-    setDisplayedTxResult(txResult);
+    setDisplayedTxResult(txResult as unknown as TransactionReceipt);
   }, [txResult]);
 
   // TODO use `useMemo` to optimize also update in ReadOnlyFunctionForm
@@ -133,7 +132,7 @@ export const WriteOnlyFunctionForm = ({
       </div>
       {zeroInputs && txResult ? (
         <div className="flex-grow basis-0">
-          <TxReceipt txResult={txResult} />
+          <TxReceipt txResult={txResult as unknown as TransactionReceipt} />
         </div>
       ) : null}
     </div>

@@ -1,30 +1,34 @@
 import { wagmiConnectors } from "./wagmiConnectors";
-import { Chain, createClient, http } from "viem";
-import { hardhat, mainnet } from "viem/chains";
-import { createConfig } from "wagmi";
+import { Chain } from "viem";
+import { configureChains, createConfig } from "wagmi";
+import { hardhat, mainnet } from "wagmi/chains";
+import { publicProvider } from "wagmi/providers/public";
+import { alchemyProvider } from "wagmi/providers/alchemy";
 import scaffoldConfig from "~~/scaffold.config";
-import { getAlchemyHttpUrl } from "~~/utils/scaffold-eth";
 
 const { targetNetworks } = scaffoldConfig;
 
 // We always want to have mainnet enabled (ENS resolution, ETH price, etc). But only once.
-export const enabledChains = targetNetworks.find((network: Chain) => network.id === 1)
+const chainArray = targetNetworks.find((network: Chain) => network.id === 1)
   ? targetNetworks
-  : ([...targetNetworks, mainnet] as const);
+  : [...targetNetworks, mainnet];
+
+// Convert readonly array to regular array for RainbowKit compatibility
+export const enabledChains = [...chainArray];
+
+// Configure chains & providers with the Alchemy provider.
+// Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
+const { chains, publicClient, webSocketPublicClient } = configureChains(
+  enabledChains,
+  [
+    alchemyProvider({ apiKey: scaffoldConfig.alchemyApiKey }),
+    publicProvider(),
+  ]
+);
 
 export const wagmiConfig = createConfig({
-  chains: enabledChains,
+  autoConnect: true,
   connectors: wagmiConnectors,
-  ssr: true,
-  client({ chain }) {
-    return createClient({
-      chain,
-      transport: http(getAlchemyHttpUrl(chain.id)),
-      ...(chain.id !== (hardhat as Chain).id
-        ? {
-            pollingInterval: scaffoldConfig.pollingInterval,
-          }
-        : {}),
-    });
-  },
+  publicClient,
+  webSocketPublicClient,
 });

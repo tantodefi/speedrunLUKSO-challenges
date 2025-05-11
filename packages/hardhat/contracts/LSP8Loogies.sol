@@ -12,8 +12,6 @@ library LSP8CompatPatch {
     bytes4 constant LSP8_TOKENID_FORMAT_NUMBER = 0x00000000;
 }
 
-
-
 import {LSP2Utils} from "@lukso/lsp2-contracts/contracts/LSP2Utils.sol";
 
 contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
@@ -27,12 +25,60 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
     mapping(bytes32 => uint256) public chubbiness;
     mapping(bytes32 => uint256) public mouthLength;
 
-    constructor(
-        string memory name,
-        string memory symbol,
-        address contractOwner
-    ) LSP8IdentifiableDigitalAsset(name, symbol, contractOwner, 1, uint256(uint32(LSP8CompatPatch.LSP8_TOKENID_FORMAT_NUMBER))) {}
+    // all funds go to buidlguidl.eth (same as in YourCollectible)
+    address payable public constant recipient =
+        payable(0xa81a6a910FeD20374361B35C451a4a44F86CeD46);
 
+    uint256 public constant limit = 3728;
+    uint256 public constant curve = 1002; // price increase 0,4% with each purchase
+    uint256 public price = 0.001 ether;
+    // the 1154th optimistic loogies cost 0.01 ETH, the 2306th cost 0.1ETH, the 3459th cost 1 ETH and the last ones cost 1.7 ETH
+
+    constructor(
+        address contractOwner
+    ) LSP8IdentifiableDigitalAsset(
+        "OptimisticLoogies", 
+        "OPLOOG", 
+        contractOwner, 
+        1, 
+        uint256(uint32(LSP8CompatPatch.LSP8_TOKENID_FORMAT_NUMBER))
+    ) {}
+
+    function mintItem() public payable returns (bytes32) {
+        require(_tokenIds < limit, "DONE MINTING");
+        require(msg.value >= price, "NOT ENOUGH");
+
+        price = (price * curve) / 1000;
+
+        _tokenIds += 1;
+        bytes32 tokenId = bytes32(uint256(_tokenIds));
+
+        bytes32 predictableRandom = keccak256(
+            abi.encodePacked(
+                tokenId,
+                blockhash(block.number - 1),
+                msg.sender,
+                address(this)
+            )
+        );
+        color[tokenId] =
+            bytes2(predictableRandom[0]) |
+            (bytes2(predictableRandom[1]) >> 8) |
+            (bytes3(predictableRandom[2]) >> 16);
+        chubbiness[tokenId] =
+            35 + ((55 * uint256(uint8(predictableRandom[3]))) / 255);
+        mouthLength[tokenId] =
+            180 + ((uint256(chubbiness[tokenId] / 4) * uint256(uint8(predictableRandom[4]))) / 255);
+
+        _mint(msg.sender, tokenId, true, "");
+
+        (bool success, ) = recipient.call{ value: msg.value }("");
+        require(success, "could not send");
+
+        return tokenId;
+    }
+
+    // Keeping the original mintLoogie for backwards compatibility
     function mintLoogie(address to) public returns (bytes32) {
         _tokenIds += 1;
         bytes32 tokenId = bytes32(uint256(_tokenIds));
@@ -164,8 +210,10 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
         return string(bstr);
     }
 
-    // _exists is inherited from LSP8IdentifiableDigitalAsset or its parents. No need to redefine.
-
+    // totalSupply function to match ERC721Enumerable functionality
+    function totalSupply() public view returns (uint256) {
+        return _tokenIds;
+    }
 
     // --- Required LSP8 overrides for multiple inheritance ---
     function getData(bytes32 key) public view override returns (bytes memory) {

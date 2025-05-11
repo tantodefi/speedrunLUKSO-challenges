@@ -5,7 +5,7 @@ import { InheritanceTooltip } from "./InheritanceTooltip";
 import { displayTxResult } from "./utilsDisplay";
 import { Abi, AbiFunction } from "abitype";
 import { Address } from "viem";
-import { useReadContract } from "wagmi";
+import { useContractRead } from "wagmi";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useAnimationConfig } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
@@ -33,14 +33,13 @@ export const DisplayVariable = ({
     isFetching,
     refetch,
     error,
-  } = useReadContract({
+  } = useContractRead({
     address: contractAddress,
     functionName: abiFunction.name,
     abi: abi,
     chainId: targetNetwork.id,
-    query: {
-      retry: false,
-    },
+    enabled: true,
+    cacheTime: 0
   });
 
   const { showAnimation } = useAnimationConfig(result);

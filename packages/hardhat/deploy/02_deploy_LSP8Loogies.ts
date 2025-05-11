@@ -5,13 +5,11 @@ const deployLSP8Loogies: DeployFunction = async function (hre: HardhatRuntimeEnv
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
 
-  // Set your name and symbol here
-  const name = "OptimisticLoogies";
-  const symbol = "OPLOOG";
-
+  // Name and symbol are now hardcoded in the contract as "OptimisticLoogies" and "OPLOOG"
+  
   await deploy("LSP8Loogies", {
     from: deployer,
-    args: [name, symbol, deployer],
+    args: [deployer], // Only passing the contractOwner argument
     log: true,
     autoMine: true,
   });

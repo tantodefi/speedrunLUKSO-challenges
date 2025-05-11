@@ -46,5 +46,28 @@
   "dependencies": {
     "@erc725/smart-contracts": "latest",
     "@lukso/lsp-smart-contracts": "^0.16.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-push": "npm run lint",
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "packages/nextjs/**/*.{ts,tsx}": [
+      "cd packages/nextjs && yarn lint",
+      "cd packages/nextjs && yarn format"
+    ],
+    "packages/hardhat/**/*.{js,ts}": [
+      "cd packages/hardhat && yarn lint",
+      "cd packages/hardhat && yarn format"
+    ]
+  },
+  "resolutions": {
+    "wagmi": "1.4.13",
+    "viem": "1.19.13",
+    "@rainbow-me/rainbowkit": "1.3.0",
+    "@tanstack/react-query": "4.28.0",
+    "burner-connector": "0.0.5"
   }
 }
