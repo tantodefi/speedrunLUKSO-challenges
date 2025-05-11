@@ -6,6 +6,7 @@ import type { NextPage } from "next";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { useScaffoldContract, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { Address } from "~~/components/scaffold-eth";
 
 const YourLoogies: NextPage = () => {
   const { address: connectedAddress } = useAccount();
@@ -43,11 +44,27 @@ const YourLoogies: NextPage = () => {
           try {
             const tokenId = await contract.read.tokenOfOwnerByIndex([connectedAddress, tokenIndex]);
             const tokenURI = await contract.read.tokenURI([tokenId]);
-            const jsonManifestString = atob(tokenURI.substring(29));
+            
+            // Parse base64 encoded data
+            // Format: data:application/json;base64,<base64_data>
+            const base64Data = tokenURI.substring(29);
+            const jsonManifestString = atob(base64Data);
 
             try {
               const jsonManifest = JSON.parse(jsonManifestString);
-              collectibleUpdate.push({ id: tokenId, uri: tokenURI, ...jsonManifest });
+              
+              // Parse the SVG from base64 if it exists
+              const svgContent = jsonManifest.image.startsWith('data:image/svg+xml;base64,') 
+                ? atob(jsonManifest.image.split(',')[1]) 
+                : null;
+                
+              collectibleUpdate.push({ 
+                id: tokenId, 
+                uri: tokenURI, 
+                owner: connectedAddress,
+                svgContent,
+                ...jsonManifest 
+              });
             } catch (e) {
               console.log(e);
             }
@@ -68,7 +85,7 @@ const YourLoogies: NextPage = () => {
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
         <div className="relative w-48 h-48 -m-12">
-          <Image alt="Loogie" className="cursor-pointer" fill src="/your-loogie.svg" />
+          <Image alt="Loogie" className="cursor-pointer" fill src="/loogie.svg" />
         </div>
         <div className="px-5">
           <h1 className="text-center">
@@ -98,9 +115,15 @@ const YourLoogies: NextPage = () => {
         <div className="flex-grow bg-base-300 w-full mt-4 p-8">
           <div className="flex justify-center items-center space-x-2">
             {loadingLoogies ? (
-              <p className="my-2 font-medium">Loading...</p>
+              <div className="my-8 flex flex-col items-center">
+                <span className="loading loading-spinner loading-lg"></span>
+                <p className="mt-4 font-medium">Loading Your Loogies...</p>
+              </div>
             ) : !yourLoogies?.length ? (
-              <p className="my-2 font-medium">No loogies minted</p>
+              <div className="my-12 flex flex-col items-center">
+                <p className="text-xl font-medium">You don't own any loogies yet</p>
+                <p className="mt-2">Mint one to see it here!</p>
+              </div>
             ) : (
               <div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-center">
@@ -108,11 +131,34 @@ const YourLoogies: NextPage = () => {
                     return (
                       <div
                         key={loogie.id}
-                        className="flex flex-col bg-base-100 p-5 text-center items-center max-w-xs rounded-3xl"
+                        className="flex flex-col bg-base-100 p-5 text-center items-center max-w-xs rounded-3xl shadow-md hover:shadow-lg transition-all"
                       >
                         <h2 className="text-xl font-bold">{loogie.name}</h2>
-                        <Image src={loogie.image} alt={loogie.name} width="300" height="300" />
-                        <p>{loogie.description}</p>
+                        <div className="my-4">
+                          {loogie.svgContent ? (
+                            <div 
+                              dangerouslySetInnerHTML={{ __html: loogie.svgContent }} 
+                              style={{ width: '300px', height: '300px' }}
+                            />
+                          ) : (
+                            <Image src="/loogie.svg" alt={loogie.name} width="300" height="300" />
+                          )}
+                        </div>
+                        <p className="mb-2">{loogie.description}</p>
+                        <div className="mt-2">
+                          <span className="text-sm font-semibold">Owner:</span>
+                          <Address address={loogie.owner} />
+                        </div>
+                        {loogie.attributes && (
+                          <div className="mt-2 text-sm">
+                            {loogie.attributes.map((attr: any, idx: number) => (
+                              <div key={idx} className="flex justify-between gap-2">
+                                <span className="font-semibold">{attr.trait_type}:</span>
+                                <span>{attr.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

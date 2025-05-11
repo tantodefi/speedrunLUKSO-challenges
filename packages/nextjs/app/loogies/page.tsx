@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import type { NextPage } from "next";
 import { formatEther } from "viem";
-import { useAccount, useChainId, useContractWrite } from "wagmi";
+import { useAccount, useChainId, useContractWrite, useContractRead, usePublicClient } from "wagmi";
 import { Address } from "~~/components/scaffold-eth";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
@@ -16,10 +16,12 @@ const Loogies: NextPage = () => {
   const chainId = useChainId();
   const { targetNetwork } = useTargetNetwork();
   const [allLoogies, setAllLoogies] = useState<any[]>([]);
+  const [tokenIdsToFetch, setTokenIdsToFetch] = useState<bigint[]>([]);
   const [page, setPage] = useState(1n);
   const [loadingLoogies, setLoadingLoogies] = useState(true);
   const [isMinting, setIsMinting] = useState(false);
   const perPage = 12n;
+  const publicClient = usePublicClient();
 
   // Get the contract information
   const { data: deployedContractData } = useDeployedContractInfo("YourCollectible");
@@ -105,40 +107,83 @@ const Loogies: NextPage = () => {
     }
   };
 
+  // Generate token IDs based on page and totalSupply
   useEffect(() => {
-    const updateAllLoogies = async () => {
-      setLoadingLoogies(true);
+    if (totalSupply) {
+      const ids: bigint[] = [];
+      const count = Number(totalSupply);
+      const pageStart = count - Number(perPage) * (Number(page) - 1);
+      const pageEnd = Math.max(pageStart - Number(perPage), 0);
       
-      if (deployedContractData?.address && totalSupply) {
-        try {
-          // For now, create placeholder data instead of fetching actual token data
-          const collectibleUpdate = [];
-          const count = Number(totalSupply);
-          const pageStart = count - Number(perPage) * (Number(page) - 1);
-          const pageEnd = Math.max(pageStart - Number(perPage), 0);
-          
-          for (let i = pageStart; i > pageEnd; i--) {
-            const tokenId = BigInt(i);
-            collectibleUpdate.push({ 
-              id: tokenId,
-              name: `Loogie #${tokenId.toString()}`,
-              image: "/loogie.svg",
-              description: `This is an Optimistic Loogie #${tokenId.toString()}`,
-              owner: connectedAddress || "0x0000000000000000000000000000000000000000"
-            });
-          }
-
-          setAllLoogies(collectibleUpdate);
-        } catch (e) {
-          console.error("Error generating loogies:", e);
-        }
+      for (let i = pageStart; i > pageEnd; i--) {
+        ids.push(BigInt(i));
       }
       
-      setLoadingLoogies(false);
+      setTokenIdsToFetch(ids);
+    }
+  }, [totalSupply, page, perPage]);
+
+  // Fetch token data one by one using wagmi
+  useEffect(() => {
+    const fetchTokenMetadata = async () => {
+      if (!tokenIdsToFetch.length || !deployedContractData?.address || !publicClient) return;
+      
+      setLoadingLoogies(true);
+      const fetchedLoogies = [];
+      
+      try {
+        for (const tokenId of tokenIdsToFetch) {
+          try {
+            // Use publicClient to call the contract
+            const tokenURI = await publicClient.readContract({
+              address: deployedContractData.address as `0x${string}`,
+              abi: deployedContractData.abi,
+              functionName: 'tokenURI',
+              args: [tokenId],
+            });
+            
+            if (tokenURI) {
+              // Parse base64 encoded data
+              // Format: data:application/json;base64,<base64_data>
+              const base64Data = (tokenURI as string).split(",")[1];
+              const jsonString = atob(base64Data);
+              const metadata = JSON.parse(jsonString);
+              
+              // Parse the SVG from base64
+              const svgContent = metadata.image.startsWith('data:image/svg+xml;base64,') 
+                ? atob(metadata.image.split(',')[1]) 
+                : null;
+              
+              fetchedLoogies.push({
+                id: tokenId,
+                ...metadata,
+                svgContent
+              });
+              
+              console.log(`Fetched token ${tokenId}:`, metadata);
+            }
+          } catch (error) {
+            console.error(`Error fetching token ${tokenId}:`, error);
+            // Add a placeholder for errored tokens
+            fetchedLoogies.push({
+              id: tokenId,
+              name: `Loogie #${tokenId.toString()}`,
+              description: "Error fetching this Loogie's data",
+              placeholder: true
+            });
+          }
+        }
+        
+        setAllLoogies(fetchedLoogies);
+      } catch (error) {
+        console.error("Error fetching token metadata:", error);
+      } finally {
+        setLoadingLoogies(false);
+      }
     };
     
-    updateAllLoogies();
-  }, [totalSupply, page, perPage, deployedContractData?.address, connectedAddress]);
+    fetchTokenMetadata();
+  }, [tokenIdsToFetch, deployedContractData, publicClient]);
 
   return (
     <>
@@ -182,9 +227,15 @@ const Loogies: NextPage = () => {
         <div className="flex-grow bg-base-300 w-full mt-4 p-8">
           <div className="flex justify-center items-center space-x-2">
             {loadingLoogies ? (
-              <p className="my-2 font-medium">Loading...</p>
+              <div className="my-8 flex flex-col items-center">
+                <span className="loading loading-spinner loading-lg"></span>
+                <p className="mt-4 font-medium">Loading Loogies...</p>
+              </div>
             ) : !allLoogies?.length ? (
-              <p className="my-2 font-medium">No loogies minted</p>
+              <div className="my-12 flex flex-col items-center">
+                <p className="text-xl font-medium">No loogies minted yet</p>
+                <p className="mt-2">Be the first to mint a Loogie!</p>
+              </div>
             ) : (
               <div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-center">
@@ -192,12 +243,34 @@ const Loogies: NextPage = () => {
                     return (
                       <div
                         key={loogie.id}
-                        className="flex flex-col bg-base-100 p-5 text-center items-center max-w-xs rounded-3xl"
+                        className="flex flex-col bg-base-100 p-5 text-center items-center max-w-xs rounded-3xl shadow-md hover:shadow-lg transition-all"
                       >
                         <h2 className="text-xl font-bold">{loogie.name}</h2>
-                        <Image src={loogie.image} alt={loogie.name} width="300" height="300" />
-                        <p>{loogie.description}</p>
-                        <Address address={loogie.owner} />
+                        <div className="my-4">
+                          {loogie.svgContent ? (
+                            <div 
+                              dangerouslySetInnerHTML={{ __html: loogie.svgContent }} 
+                              style={{ width: '300px', height: '300px' }}
+                            />
+                          ) : (
+                            <Image src="/loogie.svg" alt={loogie.name} width="300" height="300" />
+                          )}
+                        </div>
+                        <p className="mb-2">{loogie.description}</p>
+                        <div className="mt-2">
+                          <span className="text-sm font-semibold">Owner:</span>
+                          <Address address={loogie.owner} />
+                        </div>
+                        {loogie.attributes && (
+                          <div className="mt-2 text-sm">
+                            {loogie.attributes.map((attr: any, idx: number) => (
+                              <div key={idx} className="flex justify-between gap-2">
+                                <span className="font-semibold">{attr.trait_type}:</span>
+                                <span>{attr.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

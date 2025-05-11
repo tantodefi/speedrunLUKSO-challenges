@@ -24,6 +24,8 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
     mapping(bytes32 => bytes3) public color;
     mapping(bytes32 => uint256) public chubbiness;
     mapping(bytes32 => uint256) public mouthLength;
+    // Store existing token IDs to check existence at runtime
+    mapping(uint256 => bool) private _tokenIdExists;
 
     // all funds go to buidlguidl.eth (same as in YourCollectible)
     address payable public constant recipient =
@@ -51,7 +53,9 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
         price = (price * curve) / 1000;
 
         _tokenIds += 1;
+        // Convert to bytes32 in a way that ensures sequential ID format
         bytes32 tokenId = bytes32(uint256(_tokenIds));
+        _tokenIdExists[_tokenIds] = true;
 
         bytes32 predictableRandom = keccak256(
             abi.encodePacked(
@@ -82,6 +86,7 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
     function mintLoogie(address to) public returns (bytes32) {
         _tokenIds += 1;
         bytes32 tokenId = bytes32(uint256(_tokenIds));
+        _tokenIdExists[_tokenIds] = true;
 
         bytes32 predictableRandom = keccak256(
             abi.encodePacked(
@@ -102,6 +107,27 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
 
         _mint(to, tokenId, true, "");
         return tokenId;
+    }
+
+    // Helper function to check if a token exists by its uint256 ID
+    function tokenExists(uint256 id) public view returns (bool) {
+        return _tokenIdExists[id];
+    }
+
+    // Get all existing token IDs up to the current total supply
+    function getAllTokenIds() public view returns (uint256[] memory) {
+        uint256 totalCount = _tokenIds;
+        uint256[] memory result = new uint256[](totalCount);
+        uint256 resultIndex = 0;
+        
+        for (uint256 i = 1; i <= totalCount; i++) {
+            if (_tokenIdExists[i]) {
+                result[resultIndex] = i;
+                resultIndex++;
+            }
+        }
+        
+        return result;
     }
 
     function tokenURI(bytes32 tokenId) public view returns (string memory) {
