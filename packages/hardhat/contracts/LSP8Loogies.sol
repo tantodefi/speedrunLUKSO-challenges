@@ -4,6 +4,10 @@ pragma solidity ^0.8.9;
 import "@lukso/lsp8-contracts/contracts/LSP8IdentifiableDigitalAsset.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
+import "@lukso/lsp2-contracts/contracts/LSP2Utils.sol";
+import "@lukso/lsp0-contracts/contracts/ILSP0ERC725Account.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 
 import "./HexStrings.sol";
 import "./ToColor.sol";
@@ -11,8 +15,6 @@ import "./ToColor.sol";
 library LSP8CompatPatch {
     bytes4 constant LSP8_TOKENID_FORMAT_NUMBER = 0x00000000;
 }
-
-import {LSP2Utils} from "@lukso/lsp2-contracts/contracts/LSP2Utils.sol";
 
 contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
     using Strings for uint256;
@@ -38,6 +40,9 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
     uint256 public price = 0.001 ether;
     // the 1154th optimistic loogies cost 0.01 ETH, the 2306th cost 0.1ETH, the 3459th cost 1 ETH and the last ones cost 1.7 ETH
 
+    // LSP1 Universal Receiver interface ID to detect Universal Profiles
+    bytes4 constant _INTERFACEID_LSP0 = 0x3a271fff;
+    
     constructor(
         address contractOwner
     ) LSP8IdentifiableDigitalAsset(
@@ -273,15 +278,15 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
     }
 
     // Get token IDs with pagination support
-    function getTokenIdsPaginated(uint256 offset, uint256 limit) public view returns (uint256[] memory) {
+    function getTokenIdsPaginated(uint256 offset, uint256 pageSize) public view returns (uint256[] memory) {
         uint256 totalCount = _tokenIds;
         
-        // Adjust limit if it exceeds the available tokens
+        // Adjust pageSize if it exceeds the available tokens
         if (offset >= totalCount) {
             return new uint256[](0);
         }
         
-        uint256 endIndex = offset + limit;
+        uint256 endIndex = offset + pageSize;
         if (endIndex > totalCount) {
             endIndex = totalCount;
         }
@@ -356,6 +361,9 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
     }
 
     function generateSVGofTokenById(bytes32 tokenId) internal view returns (string memory) {
+        address owner = tokenOwnerOf(tokenId);
+        bool isUP = isUniversalProfile(owner);
+        
         string memory svg = string(
             abi.encodePacked(
                 '<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">',
@@ -366,14 +374,100 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
                 'font-family: "Comic Sans MS";',
                 'src: url("https://fonts.cdnfonts.com/css/comic-sans");',
                 '}',
-                '.username { font-family: "Comic Sans MS", cursive; font-size: 16px; }',
+                '.username { font-family: "Comic Sans MS", cursive; font-size: 16px; fill: white; }',
+                '.matrix-char { font-family: monospace; fill: ', 
+                isUP ? "#FF00FF" : "#0F0", 
+                '; opacity: 0.8; }',
+                '@keyframes fade { 0% { opacity: 0.2; } 30% { opacity: 0.9; } 70% { opacity: 0.9; } 100% { opacity: 0.2; } }',
+                '@keyframes fall { from { transform: translateY(-20px); } to { transform: translateY(420px); } }',
                 '</style>',
                 '</defs>',
+                // Add a semi-transparent black background rectangle
+                '<rect width="400" height="400" fill="rgba(0,0,0,0.85)" />',
+                // Matrix rain effect background using SVG elements
+                '<g class="matrix-background">',
+                generateMatrixRainEffect(tokenId),
+                '</g>',
+                // Add a slightly transparent background for the Loogie to make it stand out
+                '<g class="loogie-container">',
+                '<ellipse cx="200" cy="200" rx="120" ry="120" fill="rgba(0,0,0,0.5)" filter="blur(20px)" />',
                 renderTokenById(tokenId),
+                '</g>',
                 "</svg>"
             )
         );
         return svg;
+    }
+
+    function generateMatrixRainEffect(bytes32 tokenId) internal pure returns (string memory) {
+        // Generate pseudo-random characters for matrix effect based on tokenId
+        bytes32 predictableRandom = keccak256(abi.encodePacked(tokenId, "matrix"));
+        string memory matrixElements = "";
+        
+        // Generate 200 matrix "drops" with characters (increased for more density)
+        for (uint8 i = 0; i < 200; i++) {
+            // Create some clustering by dividing the space into sections
+            uint8 section = i / 15; // 4 sections (0-14, 15-29, 30-44, 45-59)
+            uint16 sectionWidth = 100; // Each section is 100px wide
+            
+            // Use different parts of the predictableRandom hash to place characters
+            // For x coordinate, cluster within the section with some randomness
+            uint16 x = (section * sectionWidth) + (uint16(uint8(predictableRandom[i % 32])) % sectionWidth);
+            
+            // For y coordinate, distribute more evenly
+            uint16 y = 20 + (uint16(uint8(predictableRandom[(i+1) % 32])) % 360);
+            
+            // Select a character from the matrix charset
+            uint8 charIndex = uint8(predictableRandom[(i+2) % 32]) % 36; // 0-9, A-Z = 36 chars
+            string memory character = "";
+            
+            if (charIndex < 10) {
+                // 0-9
+                character = uint2str(uint256(charIndex));
+            } else {
+                // A-Z
+                character = string(abi.encodePacked(bytes1(uint8(charIndex - 10 + 65))));
+            }
+            
+            // Add font size variation for depth effect (9px to 14px)
+            uint8 fontSize = 9 + (i % 6);
+            
+            // Create animation styles with different falling speeds
+            uint8 animationGroup = i % 4; // Split into 4 groups for different effects
+            string memory animationStyle;
+            
+            if (animationGroup == 0) {
+                // Very slow fall
+                animationStyle = string(abi.encodePacked(
+                    "font-size:", uint2str(uint256(fontSize)), "px; animation: fade 4s infinite, fall 18s linear infinite;"
+                ));
+            } else if (animationGroup == 1) {
+                // Slow fall speed
+                animationStyle = string(abi.encodePacked(
+                    "font-size:", uint2str(uint256(fontSize)), "px; animation: fade 4s infinite, fall 12s linear infinite;"
+                ));
+            } else if (animationGroup == 2) {
+                // Medium fall speed
+                animationStyle = string(abi.encodePacked(
+                    "font-size:", uint2str(uint256(fontSize)), "px; animation: fade 4s infinite, fall 9s linear infinite;"
+                ));
+            } else {
+                // Slightly faster fall speed
+                animationStyle = string(abi.encodePacked(
+                    "font-size:", uint2str(uint256(fontSize)), "px; animation: fade 4s infinite, fall 7s linear infinite;"
+                ));
+            }
+            
+            matrixElements = string(abi.encodePacked(
+                matrixElements,
+                '<text x="', uint2str(uint256(x)), '" y="', uint2str(uint256(y)), 
+                '" class="matrix-char" style="', animationStyle, '">',
+                character,
+                '</text>'
+            ));
+        }
+        
+        return matrixElements;
     }
 
     function renderTokenById(bytes32 tokenId) public view returns (string memory) {
@@ -395,14 +489,14 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
                 '<ellipse ry="3.5" rx="3" id="svg_4" cy="169.5" cx="208" stroke-width="3" fill="#000000" stroke="#000"/>',
                 "</g>",
                 '<g class="mouth" transform="translate(',
-                uint2str((810 - 9 * chubbiness[tokenId]) / 11),
+                uint2str(uint256((810 - 9 * uint256(chubbiness[tokenId])) / 11)),
                 ',0)">',
                 '<path d="M 130 240 Q 165 250 ',
                 uint2str(mouthLength[tokenId]),
                 ' 235" stroke="black" stroke-width="3" fill="transparent"/>',
                 "</g>",
-                // Add the UP username in Comic Sans
-                '<text x="200" y="300" text-anchor="middle" class="username" fill="black">',
+                // Move the UP username a bit lower (from y=275 to y=290)
+                '<text x="200" y="290" text-anchor="middle" class="username" fill="white" stroke="black" stroke-width="0.5">',
                 bytes(upUsernames[tokenId]).length > 0 ? upUsernames[tokenId] : "luksonaut",
                 '</text>'
             )
@@ -445,5 +539,40 @@ contract LSP8Loogies is LSP8IdentifiableDigitalAsset {
 
     function setDataBatch(bytes32[] memory keys, bytes[] memory values) public payable override {
         super.setDataBatch(keys, values);
+    }
+
+    // Check if an address is likely a Universal Profile
+    function isUniversalProfile(address account) public view returns (bool) {
+        // Using a try-catch because the call might revert on non-contract addresses
+        try this.supportsERC165InterfaceUnchecked(account, _INTERFACEID_LSP0) returns (bool supportsLSP0) {
+            if (supportsLSP0) {
+                try this.supportsERC165InterfaceUnchecked(account, _INTERFACEID_LSP1) returns (bool supportsLSP1) {
+                    return supportsLSP1; // If it supports both LSP0 and LSP1, it's likely a UP
+                } catch {
+                    return false;
+                }
+            }
+            return false;
+        } catch {
+            return false;
+        }
+    }
+    
+    // External function that allows checking interface support without reverting
+    function supportsERC165InterfaceUnchecked(address account, bytes4 interfaceId) external view returns (bool) {
+        // First check ERC165 support
+        try IERC165(account).supportsInterface(0x01ffc9a7) returns (bool supportsERC165) {
+            if (!supportsERC165) {
+                return false;
+            }
+            // Then check the specific interface
+            try IERC165(account).supportsInterface(interfaceId) returns (bool supportsInterface) {
+                return supportsInterface;
+            } catch {
+                return false;
+            }
+        } catch {
+            return false;
+        }
     }
 }
