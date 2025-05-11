@@ -503,7 +503,7 @@ const LSP8Loogies: NextPage = () => {
         </div>
         <div className="px-5">
           <h1 className="text-center">
-            <span className="block text-4xl font-bold">LuksoLoogies (LSP8)</span>
+            <span className="block text-4xl font-bold">LuksoLoogies</span>
             <span className="block text-2xl mt-4 mb-2">LUKSO Standard LSP8 Loogies with a smile :)</span>
           </h1>
           <div className="text-center">
@@ -647,12 +647,10 @@ const LSP8Loogies: NextPage = () => {
                             </div>
                           )}
                         </div>
-                        <p className="mb-2 text-sm">{loogie.description}</p>
-                        <div className="mt-2 w-full">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-semibold">Owner:</span>
-                            <Address address={loogie.owner} />
-                          </div>
+                        <p className="mb-2">{loogie.description}</p>
+                        <div className="mt-2">
+                          <span className="text-sm font-semibold">Owner:</span>
+                          <Address address={loogie.owner} />
                         </div>
                         {/* UP Username section - only visible to token owner */}
                         {loogie.owner && connectedAddress && loogie.owner.toLowerCase() === connectedAddress.toLowerCase() && (
@@ -704,16 +702,13 @@ const LSP8Loogies: NextPage = () => {
                           </div>
                         )}
                         {loogie.attributes && (
-                          <div className="mt-2 text-sm w-full border-t pt-2">
-                            <h3 className="font-medium mb-1 text-left">Attributes:</h3>
-                            <div className="grid grid-cols-2 gap-x-1 gap-y-2">
-                              {loogie.attributes.map((attr: any, idx: number) => (
-                                <div key={idx} className="flex items-center justify-between bg-base-200 rounded-lg px-2 py-1">
-                                  <span className="font-semibold">{attr.trait_type}:</span>
-                                  <span className="ml-1 truncate">{attr.value}</span>
-                                </div>
-                              ))}
-                            </div>
+                          <div className="mt-2 text-sm">
+                            {loogie.attributes.map((attr: any, idx: number) => (
+                              <div key={idx} className="flex justify-between gap-2">
+                                <span className="font-semibold">{attr.trait_type}:</span>
+                                <span>{attr.value}</span>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
