@@ -24,6 +24,7 @@ type AddressInfoDropdownProps = {
   blockExplorerAddressLink: string | undefined;
   displayName: string;
   ensAvatar?: string;
+  isUniversalProfile?: boolean;
 };
 
 export const AddressInfoDropdown = ({
@@ -31,6 +32,7 @@ export const AddressInfoDropdown = ({
   ensAvatar,
   displayName,
   blockExplorerAddressLink,
+  isUniversalProfile = false,
 }: AddressInfoDropdownProps) => {
   const { disconnect } = useDisconnect();
   const checkSumAddress = getAddress(address);
@@ -50,11 +52,11 @@ export const AddressInfoDropdown = ({
       <details ref={dropdownRef} className="dropdown dropdown-end leading-3">
         <summary
           tabIndex={0}
-          className="btn btn-secondary dark:hover:bg-black/20 btn-sm pl-0 pr-2 shadow-md dropdown-toggle gap-0 !h-auto"
+          className={`btn btn-secondary dark:hover:bg-black/20 btn-sm pl-0 pr-2 shadow-md dropdown-toggle gap-0 !h-auto ${isUniversalProfile ? "border-pink-500" : ""}`}
         >
           <BlockieAvatar address={checkSumAddress} size={30} ensImage={ensAvatar} />
-          <span className="ml-2 mr-1">
-            {isENS(displayName) ? displayName : checkSumAddress?.slice(0, 6) + "..." + checkSumAddress?.slice(-4)}
+          <span className={`ml-2 mr-1 ${isUniversalProfile ? "text-pink-500" : ""}`}>
+            {isUniversalProfile || isENS(displayName) ? displayName : checkSumAddress?.slice(0, 6) + "..." + checkSumAddress?.slice(-4)}
           </span>
           <ChevronDownIcon className="h-6 w-4 ml-2 sm:ml-0" />
         </summary>
@@ -111,6 +113,21 @@ export const AddressInfoDropdown = ({
               </a>
             </button>
           </li>
+          {isUniversalProfile && (
+            <li className={selectingNetwork ? "hidden" : ""}>
+              <button className="menu-item btn-sm !rounded-xl flex gap-3 py-3" type="button">
+                <ArrowTopRightOnSquareIcon className="h-6 w-4 ml-2 sm:ml-0" />
+                <a
+                  target="_blank"
+                  href={`https://erc725-inspect.lukso.tech/inspector?address=${address}&network=mainnet`}
+                  rel="noopener noreferrer"
+                  className="whitespace-nowrap"
+                >
+                  View Universal Profile
+                </a>
+              </button>
+            </li>
+          )}
           {allowedNetworks.length > 1 ? (
             <li className={selectingNetwork ? "hidden" : ""}>
               <button

@@ -9,10 +9,12 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Address } from "viem";
 import { useNetworkColor } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
+import { useUniversalProfile } from "~~/hooks/scaffold-eth/useUniversalProfile";
 import { getBlockExplorerAddressLink } from "~~/utils/scaffold-eth";
 
 /**
- * Custom Wagmi Connect Button (watch balance + custom design)
+ * Custom Wagmi Connect Button with Universal Profile support
+ * This version will show Universal Profile names and avatars if available
  */
 export const RainbowKitCustomConnectButton = () => {
   const networkColor = useNetworkColor();
@@ -25,6 +27,11 @@ export const RainbowKitCustomConnectButton = () => {
         const blockExplorerAddressLink = account
           ? getBlockExplorerAddressLink(targetNetwork, account.address)
           : undefined;
+
+        // Fetch Universal Profile metadata if connected
+        const { isUniversalProfile, upMetadata } = useUniversalProfile(
+          connected ? account.address as Address : undefined
+        );
 
         // Return null during server-side rendering to prevent hydration mismatch
         if (!mounted) {
@@ -60,9 +67,10 @@ export const RainbowKitCustomConnectButton = () => {
                   </div>
                   <AddressInfoDropdown
                     address={account.address as Address}
-                    displayName={account.displayName}
-                    ensAvatar={account.ensAvatar}
+                    displayName={isUniversalProfile && upMetadata?.name ? upMetadata.name : account.displayName}
+                    ensAvatar={isUniversalProfile && upMetadata?.avatar ? upMetadata.avatar : account.ensAvatar}
                     blockExplorerAddressLink={blockExplorerAddressLink}
+                    isUniversalProfile={isUniversalProfile}
                   />
                   <AddressQRCodeModal address={account.address as Address} modalId="qrcode-modal" />
                 </>

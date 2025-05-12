@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     LSP8Loogies: {
-      address: "0x4C4a2f8c81640e47606d3fd77B353E87Ba015584",
+      address: "0x2E2Ed0Cfd3AD2f1d34481277b3204d807Ca2F8c2",
       abi: [
         {
           inputs: [
