@@ -121,7 +121,7 @@ const config: HardhatUserConfig = {
     },
     luksoTestnet: {
       url: "https://rpc.testnet.lukso.network",
-      accounts: process.env.MNEMONIC ? { mnemonic: process.env.MNEMONIC } : [],
+      accounts: process.env.MNEMONIC ? { mnemonic: process.env.MNEMONIC } : [deployerPrivateKey],
       chainId: 4201,
     },
   },

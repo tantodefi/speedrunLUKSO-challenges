@@ -10,12 +10,13 @@ type BalanceProps = {
   address?: Address;
   className?: string;
   usdMode?: boolean;
+  chainId?: number;
 };
 
 /**
  * Display (LYX & USD) balance of an ETH address.
  */
-export const Balance = ({ address, className = "", usdMode }: BalanceProps) => {
+export const Balance = ({ address, className = "", usdMode, chainId }: BalanceProps) => {
   const { targetNetwork } = useTargetNetwork();
   const price = useGlobalState(state => state.nativeCurrencyPrice);
   const {
@@ -24,8 +25,13 @@ export const Balance = ({ address, className = "", usdMode }: BalanceProps) => {
     isLoading,
   } = useWatchBalance({
     address,
+    chainId: chainId || targetNetwork.id,
   });
 
+  // Check if we're on a LUKSO network
+  const isLuksoNetwork = (chainId === 42 || chainId === 4201) || 
+                          (targetNetwork.id === 42 || targetNetwork.id === 4201);
+  
   const [displayUsdMode, setDisplayUsdMode] = useState(price > 0 ? Boolean(usdMode) : false);
 
   const toggleBalanceMode = () => {
@@ -54,10 +60,15 @@ export const Balance = ({ address, className = "", usdMode }: BalanceProps) => {
   }
 
   const formattedBalance = balance ? Number(formatEther(balance.value)) : 0;
+  
+  // Get currency symbol - handle LUKSO networks specifically
+  const currencySymbol = isLuksoNetwork 
+    ? (targetNetwork.id === 4201 ? "LYXt" : "LYX") 
+    : targetNetwork.nativeCurrency.symbol;
 
   return (
     <button
-      className={`btn btn-sm btn-ghost flex flex-col font-normal items-center hover:bg-transparent ${className}`}
+      className={`btn btn-sm btn-ghost flex flex-col font-normal items-center hover:bg-transparent ${className} ${isLuksoNetwork ? "text-pink-500" : ""}`}
       onClick={toggleBalanceMode}
     >
       <div className="w-full flex items-center justify-center">
@@ -69,7 +80,7 @@ export const Balance = ({ address, className = "", usdMode }: BalanceProps) => {
         ) : (
           <>
             <span>{formattedBalance.toFixed(4)}</span>
-            <span className="text-[0.8em] font-bold ml-1">{targetNetwork.nativeCurrency.symbol}</span>
+            <span className="text-[0.8em] font-bold ml-1">{currencySymbol}</span>
           </>
         )}
       </div>
