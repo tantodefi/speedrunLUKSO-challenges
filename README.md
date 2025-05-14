@@ -281,3 +281,85 @@ Run the `yarn verify --network your_network` command to verify your contracts on
 > 🏃 Head to your next challenge [here](https://speedrunethereum.com).
 
 > 💬 Problems, questions, comments on the stack? Post them to the [🏗 scaffold-eth developers chat](https://t.me/joinchat/F7nCRK3kI93PoCOk)
+
+## 🚀 Using the Enhanced LSP8LoogiesEnhanced Contract
+
+This project includes an enhanced version of the LSP8Loogies contract called `LSP8LoogiesEnhanced`. This contract introduces several significant improvements, particularly in how SVGs are generated and displayed in the Universal Explorer.
+
+### Key Features of LSP8LoogiesEnhanced
+
+1. **Matrix-Themed Design**: 
+   - Dynamic SVG generation with Matrix-inspired falling code animations
+   - Glow effects and improved visual presentation
+   - Path-based Loogies instead of basic shapes for more interesting designs
+
+2. **Properly Formatted LSP4 Metadata**:
+   - Structured metadata following LUKSO's LSP4 standard
+   - Verification bytes for metadata integrity
+   - Proper attribute formatting for Universal Explorer display
+
+3. **Improved SVG Generation**:
+   - Randomized paths for head, eyes, mouth, and pupils
+   - Dynamic animation effects
+   - Better color handling for different Loogie types
+
+4. **Enhanced Minting Experience**:
+   - Price curve mechanics
+   - Limit on tokens per address
+   - Public mint toggle
+
+### How to Deploy and Test
+
+1. **Deploy the Contract**:
+   ```sh
+   cd packages/hardhat
+   npx hardhat run scripts/deployAndSetupLSP8Loogies.ts --network luksoTestnet
+   ```
+
+2. **Test SVG Generation**:
+   ```sh
+   cd packages/hardhat
+   node scripts/testSVG.js
+   ```
+   This generates sample SVGs in the `packages/hardhat/scripts/svg_output` directory, including an HTML preview file to view all generated Loogies.
+
+3. **Mint Tokens**:
+   ```sh
+   # Set your contract address from deployment
+   export LSP8_CONTRACT_ADDRESS=0xYourContractAddress
+   npx hardhat run scripts/mintLoogiesToken.ts --network luksoTestnet
+   ```
+
+4. **View in Universal Explorer**:
+   After minting, you can view your Loogies in the LUKSO Universal Explorer:
+   - Collection: https://universalexplorer.io/collections/YOUR_CONTRACT_ADDRESS?network=testnet
+   - Individual token: https://universalexplorer.io/collections/YOUR_CONTRACT_ADDRESS/TOKEN_ID?network=testnet
+
+### Development Workflow
+
+1. **Edit Contract**:
+   - Modify `packages/hardhat/contracts/LSP8LoogiesEnhanced.sol` to customize the SVG generation
+
+2. **Test Locally**:
+   - Run `node scripts/testSVG.js` to preview your SVG changes
+   - Check the HTML viewer at `packages/hardhat/scripts/svg_output/preview.html`
+
+3. **Deploy & Verify**:
+   - Deploy with `npx hardhat run scripts/deployAndSetupLSP8Loogies.ts --network luksoTestnet`
+   - Check the contract in Universal Explorer to verify metadata is correctly displayed
+
+4. **Customize**:
+   - Edit the SVG generation functions to create your own unique visuals
+   - Modify the animation styles in the SVG CSS
+   - Adjust the token attributes and metadata structure
+
+### Matrix Themed Effects
+
+The Matrix theme includes:
+- Falling digital rain animation
+- Green glow effects
+- Dynamic character generation
+- Path-based Loogie rendering
+- Proper animation timing
+
+Enjoy creating your Matrix-themed Loogies NFTs on LUKSO!
