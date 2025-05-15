@@ -12,8 +12,33 @@ import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { StyledSelect } from "~~/components/styled/StyledSelect";
 
+// Helper function to clean color strings
+const cleanColorString = (colorStr: string): string => {
+  // Make sure it starts with #
+  if (!colorStr.startsWith('#')) {
+    colorStr = `#${colorStr}`;
+  }
+  
+  // Remove extra bytes (keep only the first 7 characters for #RRGGBB format)
+  colorStr = colorStr.substring(0, 7);
+  
+  // Validate if it's a proper hex color
+  if (!/^#[0-9A-Fa-f]{6}$/.test(colorStr)) {
+    return "#00ff00"; // Return default color if invalid
+  }
+  
+  return colorStr;
+};
+
+// Contract options
+type ContractOption = "LSP8Loogies" | "LSP8LoogiesBasic";
+const CONTRACT_OPTIONS: { label: string; value: ContractOption }[] = [
+  { label: "LuksoLoogies", value: "LSP8Loogies" },
+  { label: "Loogies Basic", value: "LSP8LoogiesBasic" }
+];
+
 const LSP8Loogies: NextPage = () => {
-  const { address: connectedAddress } = useAccount();
+  const { address: connectedAddress, isConnected } = useAccount();
   const chainId = useChainId();
   const { targetNetwork } = useTargetNetwork();
   const [allLoogies, setAllLoogies] = useState<any[]>([]);
@@ -23,136 +48,202 @@ const LSP8Loogies: NextPage = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [mintCount, setMintCount] = useState(1);
   const [estimatedPrice, setEstimatedPrice] = useState<bigint | null>(null);
+  // Add state for selected contract
+  const [selectedContract, setSelectedContract] = useState<ContractOption>("LSP8Loogies");
+  // Add state to track if component is mounted (client-side)
+  const [isMounted, setIsMounted] = useState(false);
   const perPage = 12n;
   const publicClient = usePublicClient();
 
-  // Get the contract information
-  const { data: deployedContractData } = useDeployedContractInfo("LSP8Loogies");
+  // Set mounted state on client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Debug wallet connection state on mount
+  useEffect(() => {
+    console.log("Wallet connection state:", { isConnected, connectedAddress, chainId });
+  }, [isConnected, connectedAddress, chainId]);
+
+  // Get the contract information based on selection
+  const { data: deployedContractData } = useDeployedContractInfo(selectedContract);
+
+  // Get contract version details
+  const getContractDetails = () => {
+    if (selectedContract === "LSP8LoogiesBasic") {
+      return {
+        name: "Loogies Basic",
+        address: "0x1a591150667ca86de0f8d48ada752115c2587826",
+        shortAddress: "0x1a59...7826",
+        description: "Basic LSP8 implementation"
+      };
+    } else {
+      return {
+        name: "LuksoLoogies",
+        address: "0xe1D75B438a4272DEFCa481B660F3781f171d3127",
+        shortAddress: "0xe1D7...3127",
+        description: "Enhanced LSP8 implementation"
+      };
+    }
+  };
+
+  const contractDetails = getContractDetails();
 
   // Get the price
-  const { data: price, refetch: refetchPrice } = useScaffoldReadContract({
-    contractName: "LSP8Loogies",
+  const { data: price, refetch: refetchPrice, error: priceError } = useScaffoldReadContract({
+    contractName: selectedContract,
     functionName: "price",
+    onError: (error: Error) => {
+      console.log(`Error fetching price:`, error);
+    },
+    // Don't try to read price for LSP8LoogiesBasic as it doesn't expose this function externally
+    enabled: selectedContract !== "LSP8LoogiesBasic"
   });
 
   // Get the total supply
   const { data: totalSupply, refetch: refetchTotalSupply } = useScaffoldReadContract({
-    contractName: "LSP8Loogies",
+    contractName: selectedContract,
     functionName: "totalSupply",
+    onError: (error: Error) => {
+      console.log("Error fetching totalSupply:", error);
+    }
   });
 
-  // Direct contract write without using the scaffold helper
-  const { writeAsync: mintOneAsync } = useContractWrite({
-    address: deployedContractData?.address,
-    abi: deployedContractData?.abi,
-    functionName: "mintItem",
-  });
+  // Contract write function for minting
+  const { writeAsync: mintOneAsync } = useScaffoldWriteContract(
+    selectedContract,
+    "mintItem"
+  );
   
-  // Direct contract write for batch minting
-  const { writeAsync: batchMintAsync } = useContractWrite({
-    address: deployedContractData?.address,
-    abi: deployedContractData?.abi,
-    functionName: "batchMintItems",
-  });
+  const { writeAsync: batchMintAsync } = useScaffoldWriteContract(
+    selectedContract,
+    "mintLoogies"
+  );
 
   // Direct contract write for setting username
+  // Only available in original LSP8Loogies, not in Basic version
   const { writeAsync: setUsernameAsync } = useContractWrite({
     address: deployedContractData?.address,
     abi: deployedContractData?.abi,
     functionName: "setUPUsername",
+    enabled: selectedContract === "LSP8Loogies",
   });
+
+  // Reset data when contract changes
+  useEffect(() => {
+    if (!isMounted) return;
+    
+    setAllLoogies([]);
+    setPage(1n);
+    setLoadingLoogies(true);
+    setRefreshTrigger(prev => prev + 1);
+  }, [selectedContract, isMounted]);
 
   // Calculate estimated price for batch minting
   useEffect(() => {
-    if (!price) return;
+    if (!isMounted) return;
+    
+    // If price is not available, use a default value for display
+    const defaultPrice = 1000000000000000n; // 0.001 ETH
+    
+    // For LSP8LoogiesBasic use a fixed price since there's no price function
+    const basicPrice = 2000000000000000n; // 0.002 ETH - fixed price for Basic version
+    
+    // Use appropriate price based on contract
+    const currentPrice = selectedContract === "LSP8LoogiesBasic" 
+      ? basicPrice 
+      : (price || defaultPrice);
     
     let totalPrice = 0n;
-    let currentPrice = price;
+    let runningPrice = currentPrice;
     const curve = 1002n; // 0.2% increase per mint, matches contract
     
     for (let i = 0; i < mintCount; i++) {
-      totalPrice += currentPrice;
-      currentPrice = (currentPrice * curve) / 1000n;
+      totalPrice += runningPrice;
+      runningPrice = (runningPrice * curve) / 1000n;
     }
     
     setEstimatedPrice(totalPrice);
-  }, [price, mintCount]);
+  }, [price, mintCount, isMounted, selectedContract]);
 
-  // Handle minting
+  // Multi-token mint handler for contract
   const handleMint = async () => {
-    if (!connectedAddress) {
-      notification.error("Please connect your wallet");
+    // Don't proceed if already minting or not connected
+    if (isMinting || !isConnected) {
       return;
     }
-
-    if (!deployedContractData?.address) {
+    
+    // Safety checks
+    if (!deployedContractData || !deployedContractData.address) {
       notification.error("Contract data not available");
       return;
     }
 
-    const isLocalBurnerWallet = !chainId && !!connectedAddress && targetNetwork.id === 31337;
-
-    if (chainId && chainId !== targetNetwork.id && !isLocalBurnerWallet) {
-      notification.error("You are on the wrong network");
-      return;
-    }
-
-    if (!price) {
-      notification.error("Price not available");
-      return;
-    }
+    // Use fixed default price if price is not available from contract
+    // Since LSP8LoogiesBasic doesn't properly expose price, always use default for it
+    const defaultPrice = 1000000000000000n; // 0.001 ETH
+    const basicPrice = 2000000000000000n; // 0.002 ETH - fixed price for Basic version
+    const mintPrice = selectedContract === "LSP8LoogiesBasic" ? basicPrice : (price || defaultPrice);
 
     try {
       setIsMinting(true);
       
-      // Refresh price before mint to ensure we have the latest
-      await refetchPrice();
-      
-      if (mintCount === 1) {
-        // Single mint
-        console.log("Attempting to mint a single LSP8Loogie with direct contract interaction");
-        console.log("Current price:", formatEther(price), "LYX");
-        
-        const tx = await mintOneAsync({
-          value: price,
-        });
-        console.log("LSP8Loogies mint transaction:", tx.hash);
-        notification.success("Successfully minted a new LSP8 Loogie!");
-      } else {
-        // Batch mint
-        console.log(`Attempting to batch mint ${mintCount} LSP8Loogies`);
-        
-        if (!estimatedPrice) {
-          notification.error("Estimated price not available");
-          return;
+      // Try to refresh price before mint (only for original LSP8Loogies)
+      if (selectedContract !== "LSP8LoogiesBasic") {
+        try {
+          await refetchPrice();
+        } catch (e) {
+          console.log("Could not refresh price, using cached or default price");
         }
+      }
+
+      // Calculate total price based on bonding curve
+      let totalPrice = 0n;
+      let runningPrice = mintPrice;
+      let curve = 1002n; // 0.2% increase per mint
+      
+      for (let i = 0; i < mintCount; i++) {
+        totalPrice += runningPrice;
         
-        console.log("Estimated total price:", formatEther(estimatedPrice), "LYX");
+        // Increase the price for the bonding curve
+        runningPrice = (runningPrice * curve) / 1000n;
+      }
+      
+      if (selectedContract === "LSP8LoogiesBasic") {
+        console.log("Attempting to mint a single LSP8LoogiesBasic with direct contract interaction");
+        console.log("Current price:", formatEther(totalPrice), "LYX");
+      
+        try {
+          const { hash } = await mintOneAsync({
+            value: totalPrice,
+          });
         
-        const tx = await batchMintAsync({
-          args: [mintCount],
-          value: estimatedPrice,
+          notification.success("Minting transaction sent");
+        
+          // Force refresh after a delay to allow transaction to complete
+          setTimeout(() => {
+            refreshData();
+          }, 3000);
+        } catch (e) {
+          console.log("Minting error:", e);
+          notification.error("Minting failed");
+        }
+      }
+      else {
+        // Use scaffoldWriteContract for consistent UX across app
+        await batchMintAsync({
+          args: [BigInt(mintCount)],
+          value: totalPrice,
         });
         
-        console.log("LSP8Loogies batch mint transaction:", tx.hash);
-        notification.success(`Successfully minted ${mintCount} new LSP8 Loogies!`);
+        // Force refresh after mint
+        setTimeout(() => {
+          refreshData();
+        }, 1500);
       }
-      
-      // Trigger a refresh of the data and price
-      await Promise.all([refetchTotalSupply(), refetchPrice()]);
-      console.log("Updated price after mint:", price ? formatEther(price) : "unknown", "LYX");
-      setRefreshTrigger(prev => prev + 1);
-    } catch (e: any) {
-      console.error("Minting error:", e);
-      
-      // Check if the error is "NOT ENOUGH" and provide a helpful message
-      const errorMessage = e.toString();
-      if (errorMessage.includes("NOT ENOUGH")) {
-        notification.error("Price has increased. Please try again with the updated price.");
-        await refetchPrice();
-      } else {
-        notification.error("Failed to mint Loogie. See console for details.");
-      }
+    } catch (e) {
+      console.log("Minting error:", e);
+      notification.error("Minting failed");
     } finally {
       setIsMinting(false);
     }
@@ -160,11 +251,28 @@ const LSP8Loogies: NextPage = () => {
 
   // Generate array of token IDs for the current page
   useEffect(() => {
-    if (!totalSupply || !deployedContractData?.address || !publicClient) return;
+    // Skip if no wallet is connected or if contract data is missing
+    if (!isConnected || !totalSupply || !deployedContractData?.address || !publicClient || !isMounted) return;
     
     const fetchTokenIds = async () => {
       try {
-        // Try using the paginated token ID function first
+        // For LSP8LoogiesBasic we'll just manually create a list of token IDs based on totalSupply
+        if (selectedContract === "LSP8LoogiesBasic") {
+          console.log("LSP8LoogiesBasic doesn't have paginated token functions, creating manual list");
+          const totalSupplyNum = Number(totalSupply);
+          const pageTokens: bigint[] = [];
+          const startId = Math.max(1, (Number(page) - 1) * Number(perPage) + 1);
+          const endId = Math.min(startId + Number(perPage) - 1, totalSupplyNum);
+          
+          for (let i = startId; i <= endId; i++) {
+            pageTokens.push(BigInt(i));
+          }
+          
+          // Convert to bytes32 format for LSP8
+          return pageTokens.map(id => `0x${id.toString().padStart(64, '0')}`);
+        }
+        
+        // For original LSP8Loogies, try using the paginated token ID function
         let pageTokens: bigint[] = [];
         
         try {
@@ -176,6 +284,9 @@ const LSP8Loogies: NextPage = () => {
             abi: deployedContractData.abi,
             functionName: 'getTokenIdsPaginated',
             args: [offset, pageSize],
+          }).catch(e => {
+            console.log("getTokenIdsPaginated function call failed:", e);
+            throw e;
           });
           
           // Add a timeout to prevent hanging
@@ -195,6 +306,9 @@ const LSP8Loogies: NextPage = () => {
               address: deployedContractData.address as `0x${string}`,
               abi: deployedContractData.abi,
               functionName: 'getAllTokenIds',
+            }).catch(e => {
+              console.log("getAllTokenIds function call failed:", e);
+              throw e;
             });
             
             // Add a timeout to prevent hanging
@@ -233,6 +347,9 @@ const LSP8Loogies: NextPage = () => {
                 abi: deployedContractData.abi,
                 functionName: 'batchTokenExists',
                 args: [potentialIds],
+              }).catch(e => {
+                console.log("batchTokenExists function call failed:", e);
+                throw e;
               });
               
               // Add a timeout to prevent hanging
@@ -257,6 +374,9 @@ const LSP8Loogies: NextPage = () => {
                     abi: deployedContractData.abi,
                     functionName: 'tokenOwnerOf',
                     args: [tokenIdHex],
+                  }).catch(e => {
+                    // Silently fail individual token checks
+                    return null;
                   });
                   
                   // Add a timeout to prevent hanging
@@ -345,38 +465,63 @@ const LSP8Loogies: NextPage = () => {
               // Check if token exists before fetching details
               let tokenExists = false;
               try {
-                // Try the tokenExists function first (new contract version)
-                try {
-                  const exists = await publicClient.readContract({
-                    address: deployedContractData.address as `0x${string}`,
-                    abi: deployedContractData.abi,
-                    functionName: 'tokenExists',
-                    args: [BigInt(tokenId)],
-                  });
-                  
-                  tokenExists = Boolean(exists);
-                } catch (functionError) {
-                  // If tokenExists function doesn't exist yet, try tokenOwnerOf as fallback
+                // Different approaches based on contract type
+                if (selectedContract === "LSP8LoogiesBasic") {
+                  // For LSP8LoogiesBasic, directly try to get the owner
+                  // This will throw if the token doesn't exist
                   try {
-                    // Use a timeout for this call
-                    const tokenOwnerPromise = publicClient.readContract({
+                    const tokenOwner = await publicClient.readContract({
                       address: deployedContractData.address as `0x${string}`,
                       abi: deployedContractData.abi,
                       functionName: 'tokenOwnerOf',
                       args: [tokenId],
                     });
                     
-                    // Add a timeout to prevent hanging
-                    const timeoutPromise = new Promise((_, reject) => 
-                      setTimeout(() => reject(new Error("Timeout checking token owner")), 2000)
-                    );
+                    // If we get here, the token exists
+                    tokenExists = Boolean(tokenOwner);
+                  } catch (err: any) {
+                    if (err.toString().includes("TokenDoesNotExist")) {
+                      console.log(`Token ${tokenId} does not exist in LSP8LoogiesBasic contract`);
+                      tokenExists = false;
+                    } else {
+                      // Re-throw other errors
+                      throw err;
+                    }
+                  }
+                } else {
+                  // For regular LSP8Loogies, try the tokenExists function first
+                  try {
+                    const exists = await publicClient.readContract({
+                      address: deployedContractData.address as `0x${string}`,
+                      abi: deployedContractData.abi,
+                      functionName: 'tokenExists',
+                      args: [BigInt(tokenId)],
+                    }).catch(() => false);
                     
-                    // Race the promises
-                    await Promise.race([tokenOwnerPromise, timeoutPromise]);
-                    tokenExists = true;
-                  } catch (ownerError) {
-                    // If tokenOwnerOf fails, token doesn't exist
-                    tokenExists = false;
+                    tokenExists = Boolean(exists);
+                  } catch (functionError) {
+                    // If tokenExists function doesn't exist, try tokenOwnerOf as fallback
+                    try {
+                      // Use a timeout for this call
+                      const tokenOwnerPromise = publicClient.readContract({
+                        address: deployedContractData.address as `0x${string}`,
+                        abi: deployedContractData.abi,
+                        functionName: 'tokenOwnerOf',
+                        args: [tokenId],
+                      }).catch(() => null);
+                      
+                      // Add a timeout to prevent hanging
+                      const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error("Timeout checking token owner")), 2000)
+                      );
+                      
+                      // Race the promises
+                      const owner = await Promise.race([tokenOwnerPromise, timeoutPromise]);
+                      tokenExists = owner !== null;
+                    } catch (ownerError) {
+                      // If tokenOwnerOf fails, token doesn't exist
+                      tokenExists = false;
+                    }
                   }
                 }
                 
@@ -392,57 +537,319 @@ const LSP8Loogies: NextPage = () => {
               // Only fetch token data if it exists
               try {
                 console.log(`Fetching token ${tokenId}`);
-                const tokenURIPromise = publicClient.readContract({
-                  address: deployedContractData.address as `0x${string}`,
-                  abi: deployedContractData.abi,
-                  functionName: 'tokenURI',
-                  args: [tokenId],
-                });
                 
-                // Add a timeout to prevent hanging
-                const timeoutPromise = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error("Timeout fetching tokenURI")), 5000)
-                );
-                
-                // Race the promises
-                const tokenURI = await Promise.race([tokenURIPromise, timeoutPromise]);
-                
-                if (tokenURI) {
-                  // Parse base64 encoded data
-                  // Format: data:application/json;base64,<base64_data>
-                  const base64Data = (tokenURI as string).split(",")[1];
-                  const jsonString = atob(base64Data);
-                  const metadata = JSON.parse(jsonString);
-                  
-                  // Parse the SVG from base64
-                  const svgContent = metadata.image.startsWith('data:image/svg+xml;base64,') 
-                    ? atob(metadata.image.split(',')[1]) 
-                    : null;
-                  
-                  // Get the token owner
-                  const ownerPromise = publicClient.readContract({
+                // For LSP8LoogiesBasic, use a simplified approach for metadata
+                let tokenData = null;
+                if (selectedContract === "LSP8LoogiesBasic") {
+                  try {
+                    // For LSP8LoogiesBasic, we'll use stored color values (already available)
+                    // and default values for other attributes that don't exist in the ABI
+                    
+                    // First try to get color which is available in the contract
+                    const colorPromise = publicClient.readContract({
+                      address: deployedContractData.address as `0x${string}`,
+                      abi: deployedContractData.abi,
+                      functionName: 'color',
+                      args: [tokenId]
+                    }).catch(e => {
+                      console.warn(`color function error for token ${tokenId}:`, e);
+                      return null;
+                    });
+                    
+                    // Add a timeout to prevent hanging
+                    const timeoutPromise = new Promise((_, reject) => 
+                      setTimeout(() => reject(new Error("Timeout fetching token data")), 3000)
+                    );
+                    
+                    // Get color data with timeout
+                    const colorValue = await Promise.race([colorPromise, timeoutPromise])
+                      .catch(() => null);
+                    
+                    // Parse the tokenId to get a number for the name
+                    const tokenIdNum = parseInt(tokenId.slice(-8), 16) || parseInt(tokenId) || 0;
+                    
+                    // Clean up color format
+                    let colorStr = "#00ff00"; // Default green fallback
+                    if (colorValue) {
+                      if (typeof colorValue === 'string') {
+                        colorStr = colorValue.startsWith('#') ? colorValue : `#${colorValue}`;
+                      } else {
+                        colorStr = `#${colorValue.toString(16).padStart(6, '0')}`;
+                      }
+                      // Trim extra bytes in color (usually appended zeros in some LUKSO contracts)
+                      colorStr = colorStr.substring(0, 7);
+                    }
+                    
+                    // Create simplified metadata with default values for missing fields
+                    // This matches what Universal Everything does for basic loodies
+                    const metadata = {
+                      name: `Loogie #${tokenIdNum}`,
+                      description: "Loogie NFT on LUKSO",
+                      color: colorStr,
+                      chubbiness: 50, // Use fixed default values since chubbiness function isn't in ABI
+                      mouthLength: 200 // Use fixed default values since mouthLength function isn't in ABI
+                    };
+                    
+                    tokenData = JSON.stringify(metadata);
+                  } catch (e) {
+                    console.log(`Error fetching metadata for token ${tokenId}:`, e);
+                    
+                    // Last resort fallback metadata
+                    const tokenIdNum = parseInt(tokenId.slice(-8), 16) || parseInt(tokenId) || 0;
+                    tokenData = JSON.stringify({
+                      name: `Loogie #${tokenIdNum}`,
+                      description: "Loogie NFT on LUKSO",
+                      color: "#00ff00",
+                      chubbiness: 50,
+                      mouthLength: 200
+                    });
+                  }
+                } else {
+                  // For original LSP8Loogies, use tokenURI
+                  const tokenURIPromise = publicClient.readContract({
                     address: deployedContractData.address as `0x${string}`,
                     abi: deployedContractData.abi,
-                    functionName: 'tokenOwnerOf',
+                    functionName: 'tokenURI',
                     args: [tokenId],
+                  }).catch(e => {
+                    console.warn(`tokenURI function not available for ${tokenId}:`, e);
+                    return null; 
                   });
                   
                   // Add a timeout to prevent hanging
-                  const ownerTimeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error("Timeout fetching owner")), 2000)
+                  const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Timeout fetching tokenURI")), 5000)
                   );
                   
                   // Race the promises
-                  const owner = await Promise.race([ownerPromise, ownerTimeoutPromise]);
-                  
+                  tokenData = await Promise.race([tokenURIPromise, timeoutPromise]);
+                }
+                
+                // Get the token owner
+                const ownerPromise = publicClient.readContract({
+                  address: deployedContractData.address as `0x${string}`,
+                  abi: deployedContractData.abi,
+                  functionName: 'tokenOwnerOf',
+                  args: [tokenId],
+                }).catch(e => {
+                  console.warn(`tokenOwnerOf function not available for ${tokenId}:`, e);
+                  return null;
+                });
+                
+                // Add a timeout to prevent hanging
+                const ownerTimeoutPromise = new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error("Timeout fetching owner")), 2000)
+                );
+                
+                // Race the promises
+                const owner = await Promise.race([ownerPromise, ownerTimeoutPromise]);
+                
+                // Only process metadata if tokenData is available
+                if (tokenData) {
+                  try {
+                    // Parse data based on contract type
+                    let metadata;
+                    if (selectedContract === "LSP8LoogiesBasic") {
+                      // For LSP8LoogiesBasic, the metadata is directly returned as JSON string
+                      metadata = JSON.parse(tokenData as string);
+                      
+                      // Add formatted attributes for LSP8LoogiesBasic to match LSP8Loogies format
+                      if (selectedContract === "LSP8LoogiesBasic" && !metadata.attributes) {
+                        // Create attributes array from the metadata properties for consistent display
+                        metadata.attributes = [
+                          { trait_type: "color", value: metadata.color || "#00ff00" },
+                          { trait_type: "chubbiness", value: metadata.chubbiness || 50 },
+                          { trait_type: "mouthLength", value: metadata.mouthLength || 200 }
+                        ];
+
+                        // If we don't have a description, add a standard one
+                        if (!metadata.description || metadata.description === "Loogie NFT on LUKSO") {
+                          metadata.description = "A cute Loogie NFT on LUKSO blockchain with a unique color and smile!";
+                        }
+                      }
+                    } else {
+                      // For LSP8Loogies, the metadata is base64 encoded
+                      const tokenBase64Data = (tokenData as string).split(",")[1];
+                      const jsonString = atob(tokenBase64Data);
+                      metadata = JSON.parse(jsonString);
+                    }
+                    
+                    // Extract SVG from the metadata
+                    let svgContent = null;
+                    
+                    if (selectedContract === "LSP8LoogiesBasic") {
+                      try {
+                        // Try with getSVG (most direct way)
+                        const svgPromise = publicClient.readContract({
+                          address: deployedContractData.address as `0x${string}`,
+                          abi: deployedContractData.abi,
+                          functionName: 'getSVG',
+                          args: [tokenId],
+                        }).catch(e => {
+                          console.log("getSVG not available, trying renderTokenById");
+                          return null;
+                        });
+                        
+                        // Add a timeout to avoid hanging
+                        const timeoutPromise = new Promise((_, reject) => 
+                          setTimeout(() => reject(new Error("Timeout fetching SVG")), 3000)
+                        );
+                        
+                        // Try getSVG first
+                        let svgResult = await Promise.race([svgPromise, timeoutPromise])
+                          .catch(() => null);
+                          
+                        if (svgResult) {
+                          svgContent = svgResult as string;
+                        } else {
+                          // If getSVG failed, try renderTokenById
+                          const renderPromise = publicClient.readContract({
+                            address: deployedContractData.address as `0x${string}`,
+                            abi: deployedContractData.abi,
+                            functionName: 'renderTokenById',
+                            args: [tokenId],
+                          }).catch(e => {
+                            console.log("renderTokenById not available, reading token attributes");
+                            return null;
+                          });
+                          
+                          const renderResult = await Promise.race([renderPromise, timeoutPromise])
+                            .catch(() => null);
+                            
+                          if (renderResult) {
+                            // Wrap the render content in an SVG element
+                            svgContent = `<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">${renderResult}</svg>`;
+                          } else {
+                            // If both methods failed, try to rebuild SVG from individual attributes
+                            
+                            // Get color attribute
+                            const colorPromise = publicClient.readContract({
+                              address: deployedContractData.address as `0x${string}`,
+                              abi: deployedContractData.abi,
+                              functionName: 'color',
+                              args: [tokenId],
+                            }).catch(() => null);
+                            
+                            // Get chubbiness attribute
+                            const chubbinessPromise = publicClient.readContract({
+                              address: deployedContractData.address as `0x${string}`,
+                              abi: deployedContractData.abi,
+                              functionName: 'chubbiness',
+                              args: [tokenId],
+                            }).catch(() => null);
+                            
+                            // Get mouthLength attribute
+                            const mouthLengthPromise = publicClient.readContract({
+                              address: deployedContractData.address as `0x${string}`,
+                              abi: deployedContractData.abi,
+                              functionName: 'mouthLength',
+                              args: [tokenId],
+                            }).catch(() => null);
+                            
+                            // Get all attributes in parallel
+                            const [colorValue, chubbinessValue, mouthLengthValue] = await Promise.all([
+                              colorPromise, chubbinessPromise, mouthLengthPromise
+                            ]);
+                            
+                            // If we have at least some attributes, build the SVG ourselves
+                            if (colorValue || chubbinessValue || mouthLengthValue) {
+                              // Convert the color bytes to a hex string
+                              let colorHex = "#97138c"; // Default purple
+                              if (colorValue) {
+                                if (typeof colorValue === 'string') {
+                                  colorHex = colorValue.startsWith('#') ? colorValue : `#${colorValue}`;
+                                } else {
+                                  // Convert numeric representation to hex
+                                  colorHex = `#${colorValue.toString(16).padStart(6, '0')}`;
+                                }
+                                // Ensure it's only 7 chars (#RRGGBB)
+                                colorHex = colorHex.substring(0, 7);
+                              }
+                              
+                              // Get chubbiness with default
+                              const chubbiness = chubbinessValue ? Number(chubbinessValue) : 50;
+                              
+                              // Get mouth length with default
+                              const mouthLength = mouthLengthValue ? Number(mouthLengthValue) : 200;
+                              
+                              // Calculate mouth translation based on contract formula: y = 810/11 - 9x/11
+                              const translateX = Math.floor((810 - 9 * chubbiness) / 11);
+                              
+                              // Reconstruct the SVG manually following the contract's pattern
+                              svgContent = `<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+  <g id="eye1">
+    <ellipse stroke-width="3" ry="29.5" rx="29.5" id="svg_1" cy="154.5" cx="181.5" stroke="#000" fill="#fff"/>
+    <ellipse ry="3.5" rx="2.5" id="svg_3" cy="154.5" cx="173.5" stroke-width="3" stroke="#000" fill="#000000"/>
+  </g>
+  <g id="head">
+    <ellipse fill="${colorHex}" stroke-width="3" cx="204.5" cy="211.80065" id="svg_5" rx="${chubbiness}" ry="51.80065" stroke="#000"/>
+  </g>
+  <g id="eye2">
+    <ellipse stroke-width="3" ry="29.5" rx="29.5" id="svg_2" cy="168.5" cx="209.5" stroke="#000" fill="#fff"/>
+    <ellipse ry="3.5" rx="3" id="svg_4" cy="169.5" cx="208" stroke-width="3" fill="#000000" stroke="#000"/>
+  </g>
+  <g class="mouth" transform="translate(${translateX},0)">
+    <path d="M 130 240 Q 165 250 ${mouthLength} 235" stroke="black" stroke-width="3" fill="transparent"/>
+  </g>
+</svg>`;
+                            }
+                          }
+                        }
+                      } catch (svgError) {
+                        console.log("Error fetching SVG:", svgError);
+                      }
+                    } else {
+                      // For original LSP8Loogies, extract SVG from image data
+                      if (metadata.image && metadata.image.startsWith('data:image/svg+xml;base64,')) {
+                        try {
+                          svgContent = atob(metadata.image.split(',')[1]);
+                        } catch (decodeError) {
+                          console.log("Error decoding SVG base64:", decodeError);
+                        }
+                      }
+                    }
+                    
+                    // If we still don't have an SVG, use the nice placeholder
+                    if (!svgContent) {
+                      // Use the nice loogie placeholder
+                      const tokenNumber = parseInt(tokenId.slice(-8), 16) || parseInt(tokenId) || 0;
+                      svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <circle cx="200" cy="200" r="180" fill="#f0f0f0" stroke="#333" stroke-width="3"/>
+  <circle cx="140" cy="150" r="30" fill="white" stroke="#333" stroke-width="3"/>
+  <circle cx="260" cy="150" r="30" fill="white" stroke="#333" stroke-width="3"/>
+  <circle cx="140" cy="150" r="10" fill="#333"/>
+  <circle cx="260" cy="150" r="10" fill="#333"/>
+  <path d="M 130 250 Q 200 280 270 250" stroke="#333" stroke-width="5" fill="transparent"/>
+  <text x="200" y="330" font-family="Arial" font-size="20" text-anchor="middle" fill="#333">Loogie #${tokenNumber}</text>
+</svg>`;
+                    }
+                    
+                    newLoogies.push({
+                      id: tokenId,
+                      owner,
+                      ...metadata,
+                      svgContent
+                    });
+                    
+                    console.log(`Fetched token ${tokenId}:`, metadata);
+                  } catch (parseError) {
+                    // Handle case where metadata doesn't contain valid JSON
+                    console.error(`Error parsing token ${tokenId} metadata:`, parseError);
+                    newLoogies.push({
+                      id: tokenId,
+                      owner,
+                      name: `Token #${parseInt(tokenId, 16)}`,
+                      description: "Metadata unavailable",
+                    });
+                  }
+                } else {
+                  // If metadata is not available, add a basic entry
                   newLoogies.push({
                     id: tokenId,
                     owner,
-                    ...metadata,
-                    svgContent
+                    name: `Token #${parseInt(tokenId, 16)}`,
+                    description: "Metadata unavailable",
                   });
-                  
-                  console.log(`Fetched token ${tokenId}:`, metadata);
                 }
               } catch (error) {
                 console.error(`Error fetching token ${tokenId} data:`, error);
@@ -464,7 +871,7 @@ const LSP8Loogies: NextPage = () => {
     };
     
     fetchTokenData();
-  }, [totalSupply, page, refreshTrigger, deployedContractData, publicClient, perPage]);
+  }, [totalSupply, page, refreshTrigger, deployedContractData, publicClient, perPage, isConnected, isMounted]);
 
   // Update page when user changes it
   const handlePageChange = (newPage: bigint) => {
@@ -479,21 +886,52 @@ const LSP8Loogies: NextPage = () => {
   
   // Auto-refresh when mint is successful
   useEffect(() => {
+    // Skip if no wallet is connected or not mounted
+    if (!isConnected || !isMounted) return;
+    
     // Setup interval to check for new tokens
     const intervalId = setInterval(() => {
       refetchTotalSupply();
     }, 5000); // Check every 5 seconds
     
     return () => clearInterval(intervalId);
-  }, [refetchTotalSupply]);
+  }, [refetchTotalSupply, isConnected, isMounted]);
   
   // Listen for changes in totalSupply and refresh the data
   useEffect(() => {
+    // Skip if no wallet is connected or not mounted
+    if (!isConnected || !isMounted) return;
+    
     if (totalSupply !== undefined) {
       // When totalSupply changes, refresh the tokens
       setRefreshTrigger(prev => prev + 1);
     }
-  }, [totalSupply]);
+  }, [totalSupply, isConnected, isMounted]);
+
+  // If not mounted yet (server side), render a minimal placeholder
+  if (!isMounted) {
+    return (
+      <div className="flex items-center flex-col flex-grow pt-10">
+        <div className="px-5">
+          <h1 className="text-center">
+            <span className="block text-4xl font-bold">LuksoLoogies</span>
+            <span className="block text-2xl mt-4 mb-2">LUKSO Standard LSP8 Loogies with a smile :)</span>
+          </h1>
+          <div className="text-center">
+            <div>Loading...</div>
+          </div>
+        </div>
+        {/* Add empty container with same structure to avoid hydration mismatch */}
+        <div className="flex-grow bg-base-300 w-full mt-4 p-8">
+          <div className="flex justify-center items-center">
+            <div className="my-8 flex flex-col items-center">
+              <span className="loading loading-spinner loading-lg"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -515,6 +953,57 @@ const LSP8Loogies: NextPage = () => {
               </a>
             </div>
           </div>
+          
+          {/* Contract Selection Toggle */}
+          <div className="flex justify-center my-4">
+            <div className="form-control w-full max-w-xs">
+              <label className="label">
+                <span className="label-text">Select Contract Version</span>
+              </label>
+              <div className="dropdown w-full">
+                <label 
+                  tabIndex={0} 
+                  className={`w-full btn bg-base-100 border border-base-300 hover:border-primary ${isMinting ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <span className="font-normal">{
+                    CONTRACT_OPTIONS.find(option => option.value === selectedContract)?.label || "Select Contract"
+                  }</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </label>
+                <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow-lg bg-base-100 rounded-box w-full mt-1">
+                  {CONTRACT_OPTIONS.map(option => (
+                    <li key={option.value}>
+                      <button
+                        type="button"
+                        disabled={isMinting}
+                        className={`${option.value === selectedContract ? "bg-base-200 font-medium" : ""} ${isMinting ? "cursor-not-allowed" : "hover:bg-base-200"}`}
+                        onClick={() => {
+                          if (!isMinting) {
+                            setSelectedContract(option.value);
+                            // Find the dropdown element and remove its tabIndex focus
+                            const dropdownElement = document.querySelector('.dropdown label[tabIndex="0"]') as HTMLElement | null;
+                            if (dropdownElement) {
+                              dropdownElement.blur();
+                            }
+                          }
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <label className="label">
+                <span className="label-text-alt">
+                  {contractDetails.description} ({contractDetails.shortAddress})
+                </span>
+              </label>
+            </div>
+          </div>
+          
           <div className="flex flex-col justify-center items-center mt-6 mb-8">
             <div className="card bg-base-100 shadow-md p-4 max-w-md w-full border border-base-300">
               <div className="card-body p-2">
@@ -559,14 +1048,14 @@ const LSP8Loogies: NextPage = () => {
                     </div>
                     
                     <div className="flex items-center">
-                      <span className="text-sm font-medium">Price: <span className="font-bold">{estimatedPrice ? (+formatEther(estimatedPrice)).toFixed(6) : "-"} LYX</span></span>
+                      <span className="text-sm font-medium">Price: <span className="font-bold">{estimatedPrice ? (+formatEther(estimatedPrice)).toFixed(6) : "0.001"} LYX</span></span>
                     </div>
                   </div>
                   
                   <button
                     onClick={handleMint}
                     className="btn btn-primary w-full"
-                    disabled={!connectedAddress || !price || isMinting}
+                    disabled={!connectedAddress || isMinting}
                   >
                     {isMinting ? (
                       <>
@@ -582,6 +1071,7 @@ const LSP8Loogies: NextPage = () => {
                   
                   <div className="flex items-center justify-between text-sm">
                     <div className="badge badge-neutral">{Number(3728n - (totalSupply || 0n))} Loogies left</div>
+                    <div className="text-sm">Price: <span className="font-bold">{estimatedPrice ? (+formatEther(estimatedPrice)).toFixed(6) : "0.001"} LYX</span></div>
                     <button onClick={refreshData} className="btn btn-xs btn-ghost">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -596,8 +1086,13 @@ const LSP8Loogies: NextPage = () => {
         </div>
 
         <div className="flex-grow bg-base-300 w-full mt-4 p-8">
-          <div className="flex justify-center items-center space-x-2">
-            {loadingLoogies ? (
+          <div className="flex justify-center items-center">
+            {!isConnected ? (
+              <div className="my-12 flex flex-col items-center">
+                <p className="text-xl font-medium">Please connect your wallet to interact with Loogies</p>
+                <p className="mt-2 mb-4">Connect to the LUKSO testnet network to mint and view Loogies</p>
+              </div>
+            ) : loadingLoogies ? (
               <div className="my-8 flex flex-col items-center">
                 <span className="loading loading-spinner loading-lg"></span>
                 <p className="mt-4 font-medium">Loading Loogies...</p>
@@ -631,8 +1126,22 @@ const LSP8Loogies: NextPage = () => {
                     return (
                       <div
                         key={loogie.id}
-                        className="flex flex-col bg-base-100 p-5 text-center items-center max-w-xs rounded-3xl shadow-md hover:shadow-lg transition-all"
+                        className="flex flex-col bg-base-100 p-5 text-center items-center max-w-xs rounded-3xl shadow-md hover:shadow-lg transition-all relative"
                       >
+                        {/* UniversalEverything.io link */}
+                        <a 
+                          href={`https://universaleverything.io/asset/${deployedContractData?.address}/tokenId/${loogie.id}?network=testnet`}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="absolute top-3 right-3 p-1 rounded-full bg-base-200 hover:bg-base-300 transition-colors"
+                          title="View on Universal Explorer"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                          </svg>
+                        </a>
                         <h2 className="text-xl font-bold">{loogie.name}</h2>
                         <div className="my-4">
                           {loogie.svgContent ? (
@@ -652,8 +1161,11 @@ const LSP8Loogies: NextPage = () => {
                           <span className="text-sm font-semibold">Owner:</span>
                           <Address address={loogie.owner} />
                         </div>
-                        {/* UP Username section - only visible to token owner */}
-                        {loogie.owner && connectedAddress && loogie.owner.toLowerCase() === connectedAddress.toLowerCase() && (
+                        {/* UP Username section - only visible to token owner and for LSP8Loogies (not Basic) */}
+                        {loogie.owner && 
+                         connectedAddress && 
+                         loogie.owner.toLowerCase() === connectedAddress.toLowerCase() && 
+                         selectedContract === "LSP8Loogies" && (
                           <div className="mt-4 w-full border-t pt-4">
                             <span className="text-sm font-semibold block mb-2">Set UP Username:</span>
                             <form 

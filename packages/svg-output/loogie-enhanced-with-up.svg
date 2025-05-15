@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Comic+Sans+MS&amp;display=swap");
+      .username { font-family: "Comic Sans MS", cursive; font-size: 16px; fill: white; text-anchor: middle; }
+      .matrix-char { font-family: monospace; fill: #ff00ff; opacity: 0.3; animation: fade 3s infinite, fall 8s linear infinite; }
+      @keyframes fade { 0% { opacity: 0.2; } 30% { opacity: 0.9; } 70% { opacity: 0.9; } 100% { opacity: 0.2; } }
+      @keyframes fall { from { transform: translateY(-20px); } to { transform: translateY(420px); } }
+    </style>
+    
+  </defs>
+  <rect width="400" height="400" fill="black"/>
+  
+  <g class="loogie-container">
+    <!-- First eye -->
+    <g id="eye1">
+      <ellipse stroke-width="3" ry="29.5" rx="29.5" id="svg_1" cy="154.5" cx="181.5" stroke="#000" fill="#fff"/>
+      <ellipse ry="3.5" rx="2.5" id="svg_3" cy="154.5" cx="173.5" stroke-width="3" stroke="#000" fill="#000000"/>
+    </g>
+    <!-- Head -->
+    <g id="head">
+      <ellipse fill="#00ccff" stroke-width="3" cx="204.5" cy="211.80065" id="svg_5" rx="40" ry="51.80065" stroke="#000"/>
+    </g>
+    <!-- Second eye -->
+    <g id="eye2">
+      <ellipse stroke-width="3" ry="29.5" rx="29.5" id="svg_2" cy="168.5" cx="209.5" stroke="#000" fill="#fff"/>
+      <ellipse ry="3.5" rx="3" id="svg_4" cy="169.5" cx="208" stroke-width="3" fill="#000000" stroke="#000"/>
+    </g>
+    <!-- Mouth with translation based on chubbiness -->
+    <g class="mouth" transform="translate(40,0)">
+      <path d="M 130 240 Q 165 250 190 235" stroke="black" stroke-width="3" fill="transparent"/>
+    </g>
+    <text x="200" y="300" class="username" style="font-family: 'Comic Sans MS', cursive;">LUKSO User</text>
+  </g>
+</svg>
