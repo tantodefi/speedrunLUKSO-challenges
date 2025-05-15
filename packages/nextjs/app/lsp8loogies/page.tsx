@@ -1112,7 +1112,13 @@ const LSP8Loogies: NextPage = () => {
             <span className="block text-2xl mt-4 mb-2">LUKSO Standard LSP8 Loogies with a smile :)</span>
           </h1>
           <div className="text-center">
-            <div>Only 3728 LuksoLoogies available on a price curve increasing 0.2% with each new mint.</div>
+            <div>
+              {selectedContract === "LSP8Loogies" ? (
+                <>Only 3728 LuksoLoogies available on a price curve increasing 0.2% with each new mint.</>
+              ) : (
+                <>Only 3728 Loogies Basic available for minting.</>
+              )}
+            </div>
             <div>
               Double the supply of the{" "}
               <a className="underline" href="https://loogies.io/" target="_blank" rel="noopener noreferrer">
