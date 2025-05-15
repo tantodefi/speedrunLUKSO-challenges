@@ -141,7 +141,8 @@ async function main() {
   }
   
   console.log("\n=== VERIFICATION COMPLETE ===");
-  console.log(`Check your contract on the Universal Explorer:`);
+  console.log("\nView your collection at:");
+  console.log(`https://universal.page/collections/lukso-testnet/${contractAddress}`);
   console.log(`https://universaleverything.io/collection/${contractAddress}?network=testnet`);
 }
 

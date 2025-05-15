@@ -209,11 +209,11 @@ const YourLoogies: NextPage = () => {
                       >
                         {lsp8LoogiesContract && (
                           <a 
-                            href={`https://universaleverything.io/asset/${lsp8LoogiesContract?.address}/tokenId/${loogie.id}?network=testnet`}
+                            href={`https://universal.page/collections/lukso-testnet/${lsp8LoogiesContract?.address}/${loogie.id}`}
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="absolute top-3 right-3 p-1 rounded-full bg-base-200 hover:bg-base-300 transition-colors"
-                            title="View on Universal Explorer"
+                            title="View on Universal.page"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>

@@ -197,9 +197,9 @@ async function main() {
   }
   
   console.log("\nYour LSP8Loogies have been successfully migrated to the new LSP8LoogiesUpdated contract.");
-  console.log("✅ Tokens migrated with all their metadata");
-  console.log("✅ Matrix-style animations added through OnChainMetadata contract");
-  console.log("✅ Proper LSP4 metadata format with verification bytes");
+  console.log("---------------------------------------------------------------------------");
+  console.log(`New Contract: ${newContractAddress}`);
+  console.log(`View on Universal.page: https://universal.page/collections/lukso-testnet/${newContractAddress}`);
   console.log(`View in Universal Explorer: https://universaleverything.io/collection/${newContractAddress}?network=testnet`);
 }
 

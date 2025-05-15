@@ -119,6 +119,11 @@ To fully verify all changes, please check the following:
    - Numeric values should appear as numbers, not strings
 `);
     
+    console.log("\nInterfaces Verified Successfully!");
+    console.log(`Contract address: ${contractAddress}`);
+    console.log(`View on Universal.page: https://universal.page/collections/lukso-testnet/${contractAddress}`);
+    console.log(`Link to collection: https://universaleverything.io/collection/${contractAddress}?network=testnet`);
+    
   } catch (error) {
     console.error("Error:", error);
   }

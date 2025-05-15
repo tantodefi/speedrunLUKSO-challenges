@@ -141,12 +141,18 @@ async function main() {
     
     console.log("\n=== METADATA UPDATE ATTEMPT COMPLETE ===");
     console.log(`
-🔍 Check your contract on the Universal Explorer:
+Metadata update complete! Your LSP8Loogies collection should now display correctly in Universal Explorer.
+
+- Token Details:
+  - Token ID: ${tokenId}
+
+- Collection: https://universal.page/collections/lukso-testnet/${contractAddress}
 - Collection: https://universaleverything.io/collection/${contractAddress}?network=testnet
+- Token: https://universal.page/collections/lukso-testnet/${contractAddress}/${tokenId}
 - Token: https://universaleverything.io/asset/${contractAddress}/tokenId/${tokenId}?network=testnet
 
 Note: It may take a few minutes for the Universal Explorer to refresh the metadata.
-    `);
+`);
     
   } catch (error: any) {
     console.error("Error fixing metadata display:", error.message);

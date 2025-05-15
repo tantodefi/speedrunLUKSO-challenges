@@ -97,7 +97,7 @@ contract LoogieMetadata {
         uint256 chubbinessValue,
         uint256 mouthLengthValue,
         string memory username
-    ) internal pure returns (string memory) {
+    ) internal view returns (string memory) {
         // Get path indices for variation
         uint8 headIdx = getRandomPathIndex(tokenId, 0, 3);
         uint8 eyeIdx = getRandomPathIndex(tokenId, 1, 3);
@@ -354,7 +354,7 @@ contract LSP8LoogiesFixed is LSP8IdentifiableDigitalAsset, ReentrancyGuard {
         uint256 chubbinessValue,
         uint256 mouthLengthValue,
         string memory username
-    ) internal pure returns (string memory) {
+    ) internal view returns (string memory) {
         // Convert color to hex
         string memory colorHex = toColorHex(colorValue);
         

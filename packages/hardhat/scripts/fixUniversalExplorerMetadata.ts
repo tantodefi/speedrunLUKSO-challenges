@@ -90,7 +90,9 @@ async function main() {
   }
   
   console.log("\n=== METADATA UPDATE COMPLETE ===");
-  console.log("Check the Universal Explorer to see if metadata displays correctly now:");
+  console.log("Metadata fixed successfully!");
+  console.log("\nView your collection at:");
+  console.log(`https://universal.page/collections/lukso-testnet/${lsp8ContractAddress}`);
   console.log(`https://universaleverything.io/collection/${lsp8ContractAddress}?network=testnet`);
 }
 

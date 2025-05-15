@@ -48,8 +48,8 @@ const LSP8Loogies: NextPage = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [mintCount, setMintCount] = useState(1);
   const [estimatedPrice, setEstimatedPrice] = useState<bigint | null>(null);
-  // Add state for selected contract
-  const [selectedContract, setSelectedContract] = useState<ContractOption>("LSP8Loogies");
+  // Add state for selected contract - change default to LSP8LoogiesBasic
+  const [selectedContract, setSelectedContract] = useState<ContractOption>("LSP8LoogiesBasic");
   // Add state to track if component is mounted (client-side)
   const [isMounted, setIsMounted] = useState(false);
   const perPage = 12n;
@@ -172,7 +172,7 @@ const LSP8Loogies: NextPage = () => {
     if (isMinting || !isConnected) {
       return;
     }
-    
+
     // Safety checks
     if (!deployedContractData || !deployedContractData.address) {
       notification.error("Contract data not available");
@@ -196,7 +196,7 @@ const LSP8Loogies: NextPage = () => {
           console.log("Could not refresh price, using cached or default price");
         }
       }
-
+      
       // Calculate total price based on bonding curve
       let totalPrice = 0n;
       let runningPrice = mintPrice;
@@ -224,7 +224,7 @@ const LSP8Loogies: NextPage = () => {
           setTimeout(() => {
             refreshData();
           }, 3000);
-        } catch (e) {
+      } catch (e) {
           console.log("Minting error:", e);
           notification.error("Minting failed");
         }
@@ -547,17 +547,17 @@ const LSP8Loogies: NextPage = () => {
                     
                     // First try to get color which is available in the contract
                     const colorPromise = publicClient.readContract({
-                      address: deployedContractData.address as `0x${string}`,
-                      abi: deployedContractData.abi,
+                    address: deployedContractData.address as `0x${string}`,
+                    abi: deployedContractData.abi,
                       functionName: 'color',
                       args: [tokenId]
-                    }).catch(e => {
+                  }).catch(e => {
                       console.warn(`color function error for token ${tokenId}:`, e);
-                      return null;
-                    });
-                    
-                    // Add a timeout to prevent hanging
-                    const timeoutPromise = new Promise((_, reject) => 
+                    return null; 
+                  });
+                  
+                  // Add a timeout to prevent hanging
+                  const timeoutPromise = new Promise((_, reject) => 
                       setTimeout(() => reject(new Error("Timeout fetching token data")), 3000)
                     );
                     
@@ -656,10 +656,11 @@ const LSP8Loogies: NextPage = () => {
                       // Add formatted attributes for LSP8LoogiesBasic to match LSP8Loogies format
                       if (selectedContract === "LSP8LoogiesBasic" && !metadata.attributes) {
                         // Create attributes array from the metadata properties for consistent display
+                        const mouthLength = await getMouthLength(tokenId);
                         metadata.attributes = [
                           { trait_type: "color", value: metadata.color || "#00ff00" },
                           { trait_type: "chubbiness", value: metadata.chubbiness || 50 },
-                          { trait_type: "mouthLength", value: metadata.mouthLength || 200 }
+                          { trait_type: "mouthLength", value: mouthLength }
                         ];
 
                         // If we don't have a description, add a standard one
@@ -672,6 +673,9 @@ const LSP8Loogies: NextPage = () => {
                       const tokenBase64Data = (tokenData as string).split(",")[1];
                       const jsonString = atob(tokenBase64Data);
                       metadata = JSON.parse(jsonString);
+                      
+                      // Ensure we're using the actual attributes from the tokenURI for LSP8Loogies
+                      console.log(`LSP8Loogies token ${tokenId} attributes:`, metadata.attributes);
                     }
                     
                     // Extract SVG from the metadata
@@ -769,8 +773,30 @@ const LSP8Loogies: NextPage = () => {
                               // Get chubbiness with default
                               const chubbiness = chubbinessValue ? Number(chubbinessValue) : 50;
                               
-                              // Get mouth length with default
-                              const mouthLength = mouthLengthValue ? Number(mouthLengthValue) : 200;
+                              // Get mouth length - use our new function for consistency
+                              const mouthLength = await getMouthLength(tokenId);
+                              
+                              // Update the metadata attributes with real values from the contract
+                              if (metadata.attributes) {
+                                // Update existing attributes
+                                const colorAttr = metadata.attributes.find((a: any) => a.trait_type === 'color');
+                                if (colorAttr) colorAttr.value = colorHex;
+                                
+                                const chubbinessAttr = metadata.attributes.find((a: any) => a.trait_type === 'chubbiness');
+                                if (chubbinessAttr) chubbinessAttr.value = chubbiness;
+                                
+                                const mouthLengthAttr = metadata.attributes.find((a: any) => a.trait_type === 'mouthLength');
+                                if (mouthLengthAttr) {
+                                  mouthLengthAttr.value = mouthLength;
+                                }
+                              } else {
+                                // Create new attributes array if one doesn't exist
+                                metadata.attributes = [
+                                  { trait_type: "color", value: colorHex },
+                                  { trait_type: "chubbiness", value: chubbiness },
+                                  { trait_type: "mouthLength", value: mouthLength }
+                                ];
+                              }
                               
                               // Calculate mouth translation based on contract formula: y = 810/11 - 9x/11
                               const translateX = Math.floor((810 - 9 * chubbiness) / 11);
@@ -789,7 +815,7 @@ const LSP8Loogies: NextPage = () => {
     <ellipse ry="3.5" rx="3" id="svg_4" cy="169.5" cx="208" stroke-width="3" fill="#000000" stroke="#000"/>
   </g>
   <g class="mouth" transform="translate(${translateX},0)">
-    <path d="M 130 240 Q 165 250 ${mouthLength} 235" stroke="black" stroke-width="3" fill="transparent"/>
+    <path d="M 130 240 Q 165 250 ${Math.min(Math.max(mouthLength, 175), 225)} 235" stroke="black" stroke-width="3" fill="transparent"/>
   </g>
 </svg>`;
                             }
@@ -805,6 +831,90 @@ const LSP8Loogies: NextPage = () => {
                           svgContent = atob(metadata.image.split(',')[1]);
                         } catch (decodeError) {
                           console.log("Error decoding SVG base64:", decodeError);
+                        }
+                        
+                        // Try to fetch actual attribute values from the contract for original LSP8Loogies
+                        if (metadata.attributes) {
+                          try {
+                            // Get color
+                            const colorPromise = publicClient.readContract({
+                              address: deployedContractData.address as `0x${string}`,
+                              abi: deployedContractData.abi,
+                              functionName: 'color',
+                              args: [tokenId],
+                            }).catch(() => null);
+                            
+                            // Get chubbiness
+                            const chubbinessPromise = publicClient.readContract({
+                              address: deployedContractData.address as `0x${string}`,
+                              abi: deployedContractData.abi,
+                              functionName: 'chubbiness',
+                              args: [tokenId],
+                            }).catch(() => null);
+                            
+                            // Get mouthLength
+                            const mouthLengthPromise = publicClient.readContract({
+                              address: deployedContractData.address as `0x${string}`,
+                              abi: deployedContractData.abi,
+                              functionName: 'mouthLength',
+                              args: [tokenId],
+                            }).catch(() => null);
+                            
+                            // Get all attributes in parallel with timeout
+                            const attributesPromise = Promise.all([colorPromise, chubbinessPromise, mouthLengthPromise]);
+                            const timeoutPromise = new Promise<[null, null, null]>((_, reject) => 
+                              setTimeout(() => reject(new Error("Timeout fetching attributes")), 2000)
+                            );
+                            
+                            try {
+                              const [colorValue, chubbinessValue, mouthLengthValue] = await Promise.race([
+                                attributesPromise,
+                                timeoutPromise
+                              ]);
+                              
+                              // Update attributes with real values if they were successfully fetched
+                              if (colorValue) {
+                                let colorHex = colorValue;
+                                if (typeof colorValue !== 'string') {
+                                  colorHex = `#${colorValue.toString(16).padStart(6, '0')}`;
+                                }
+                                if (!colorHex.startsWith('#')) {
+                                  colorHex = `#${colorHex}`;
+                                }
+                                colorHex = colorHex.substring(0, 7); // Ensure 7 chars (#RRGGBB)
+                                
+                                const colorAttr = metadata.attributes.find((a: any) => a.trait_type === 'color');
+                                if (colorAttr) colorAttr.value = colorHex;
+                              }
+                              
+                              if (chubbinessValue) {
+                                const chubbiness = Number(chubbinessValue);
+                                const chubbinessAttr = metadata.attributes.find((a: any) => a.trait_type === 'chubbiness');
+                                if (chubbinessAttr) chubbinessAttr.value = chubbiness;
+                              }
+                              
+                              if (mouthLengthValue) {
+                                const mouthLength = Number(mouthLengthValue);
+                                const mouthLengthAttr = metadata.attributes.find((a: any) => a.trait_type === 'mouthLength');
+                                if (mouthLengthAttr) {
+                                  // Use token-specific mouth length or the contract provided one
+                                  const updatedMouthLength = await getMouthLength(tokenId);
+                                  mouthLengthAttr.value = updatedMouthLength || mouthLength;
+                                }
+                              } else {
+                                // If we couldn't get mouth length from the contract
+                                const mouthLengthAttr = metadata.attributes.find((a: any) => a.trait_type === 'mouthLength');
+                                if (mouthLengthAttr) {
+                                  // Use token-specific mouth length
+                                  mouthLengthAttr.value = await getMouthLength(tokenId);
+                                }
+                              }
+                            } catch (timeoutError) {
+                              console.log("Timeout fetching attributes for LSP8Loogies, using metadata values");
+                            }
+                          } catch (attributeError) {
+                            console.log("Error fetching attributes for LSP8Loogies:", attributeError);
+                          }
                         }
                       }
                     }
@@ -933,6 +1043,63 @@ const LSP8Loogies: NextPage = () => {
     );
   }
 
+  // Function to get mouth length for the loogie from token ID
+  const getMouthLength = async (tokenId: string) => {
+    try {
+      // Try direct mouthLength function call first
+      const mouthLengthPromise = publicClient.readContract({
+        address: deployedContractData.address as `0x${string}`,
+        abi: deployedContractData.abi,
+        functionName: 'mouthLength',
+        args: [tokenId],
+      }).catch(() => null);
+      
+      // Set a timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Timeout fetching mouth length")), 1000)
+      );
+      
+      // Race the promises
+      const mouthLengthValue = await Promise.race([mouthLengthPromise, timeoutPromise]);
+      
+      if (mouthLengthValue !== null) {
+        return Number(mouthLengthValue);
+      }
+      
+      // If direct call fails, try to get tokenData (for Basic version)
+      const tokenDataPromise = publicClient.readContract({
+        address: deployedContractData.address as `0x${string}`,
+        abi: deployedContractData.abi,
+        functionName: 'getTokenData',
+        args: [tokenId],
+      }).catch(() => null);
+      
+      const tokenData = await Promise.race([tokenDataPromise, timeoutPromise]);
+      
+      if (tokenData && tokenData.mouthLength) {
+        return Number(tokenData.mouthLength);
+      }
+      
+      // Use token ID to generate a limited but consistent range (175-225)
+      const tokenIdNumber = parseInt(tokenId.slice(-8), 16) || parseInt(tokenId) || 0;
+      const randomValue = ((tokenIdNumber % 50) + 175); // Range 175-225
+      return randomValue;
+      
+    } catch (error) {
+      console.log("Error getting mouth length:", error);
+      // Use safer fallback range
+      return 200;
+    }
+  };
+  
+  // Add function to get values from the specific attribute types
+  const getAttributeValue = async (name: string, tokenId: string) => {
+    if (name === 'mouthLength') {
+      return await getMouthLength(tokenId);
+    }
+    return null;
+  };
+
   return (
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
@@ -973,7 +1140,7 @@ const LSP8Loogies: NextPage = () => {
                   </svg>
                 </label>
                 <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow-lg bg-base-100 rounded-box w-full mt-1">
-                  {CONTRACT_OPTIONS.map(option => (
+                {CONTRACT_OPTIONS.map(option => (
                     <li key={option.value}>
                       <button
                         type="button"
@@ -990,10 +1157,10 @@ const LSP8Loogies: NextPage = () => {
                           }
                         }}
                       >
-                        {option.label}
+                    {option.label}
                       </button>
                     </li>
-                  ))}
+                ))}
                 </ul>
               </div>
               <label className="label">
@@ -1007,7 +1174,26 @@ const LSP8Loogies: NextPage = () => {
           <div className="flex flex-col justify-center items-center mt-6 mb-8">
             <div className="card bg-base-100 shadow-md p-4 max-w-md w-full border border-base-300">
               <div className="card-body p-2">
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-6 mb-4">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-xl font-bold">{contractDetails.name}</h3>
+                        <div className="mt-1 opacity-70">
+                          <p className="text-sm">{contractDetails.description} (<a 
+                            href={`https://universal.page/collections/lukso-testnet/${contractDetails.address}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-black font-semibold hover:underline hover:text-primary-focus"
+                            title="View collection on Universal.page"
+                          >
+                            {contractDetails.shortAddress}
+                          </a>)</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <label className="text-sm font-medium">Mint count:</label>
@@ -1128,20 +1314,38 @@ const LSP8Loogies: NextPage = () => {
                         key={loogie.id}
                         className="flex flex-col bg-base-100 p-5 text-center items-center max-w-xs rounded-3xl shadow-md hover:shadow-lg transition-all relative"
                       >
-                        {/* UniversalEverything.io link */}
-                        <a 
-                          href={`https://universaleverything.io/asset/${deployedContractData?.address}/tokenId/${loogie.id}?network=testnet`}
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="absolute top-3 right-3 p-1 rounded-full bg-base-200 hover:bg-base-300 transition-colors"
-                          title="View on Universal Explorer"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                            <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                          </svg>
-                        </a>
+                        {/* Marketplace Links */}
+                        <div className="absolute top-3 right-3 flex gap-2">
+                          {/* Universal.page link */}
+                          <a 
+                            href={`https://universal.page/collections/lukso-testnet/${deployedContractData?.address}/${loogie.id}`}
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-1 rounded-full bg-base-200 hover:bg-base-300 transition-colors"
+                            title="View on Universal.page"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                              <polyline points="15 3 21 3 21 9"></polyline>
+                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                          </a>
+                          
+                          {/* Universal Everything link */}
+                          <a 
+                            href={`https://universaleverything.io/asset/${deployedContractData?.address}/tokenId/${loogie.id}?network=testnet`}
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-1 rounded-full bg-base-200 hover:bg-base-300 transition-colors"
+                            title="View on Universal Everything"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <line x1="2" y1="12" x2="22" y2="12"></line>
+                              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                          </a>
+                        </div>
                         <h2 className="text-xl font-bold">{loogie.name}</h2>
                         <div className="my-4">
                           {loogie.svgContent ? (

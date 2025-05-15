@@ -269,7 +269,7 @@ contract OnChainMetadata {
     /**
      * @dev Generate Matrix rain effect for SVG
      */
-    function generateMatrixRainEffect(bytes32 tokenId) internal pure returns (string memory) {
+    function generateMatrixRainEffect(bytes32 tokenId) internal view returns (string memory) {
         return string(
             abi.encodePacked(
                 '<filter id="matrix-glow" x="-20%" y="-20%" width="140%" height="140%">',
@@ -287,7 +287,7 @@ contract OnChainMetadata {
     /**
      * @dev Generate random Matrix characters for background
      */
-    function generateRandomMatrixChars(bytes32 seed) internal pure returns (string memory) {
+    function generateRandomMatrixChars(bytes32 seed) internal view returns (string memory) {
         string memory chars = '<g class="matrix-chars">';
         uint8[15] memory xPositions;
         
@@ -325,7 +325,7 @@ contract OnChainMetadata {
      * @return svg The SVG string
      * @return encodedSvg Base64 encoded SVG with data URI
      */
-    function generateCollectionSVG() public pure returns (string memory svg, string memory encodedSvg) {
+    function generateCollectionSVG() public view returns (string memory svg, string memory encodedSvg) {
         svg = string(
             abi.encodePacked(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">',
@@ -437,7 +437,7 @@ contract OnChainMetadata {
      * @return raw Raw metadata bytes
      * @return encoded Encoded metadata bytes
      */
-    function getCollectionMetadataBytes(uint256 limit) public pure returns (bytes memory raw, bytes memory encoded) {
+    function getCollectionMetadataBytes(uint256 limit) public view returns (bytes memory raw, bytes memory encoded) {
         // Generate collection SVG
         (string memory collectionSvg, string memory encodedSvg) = generateCollectionSVG();
         

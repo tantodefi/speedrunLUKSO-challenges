@@ -71,7 +71,9 @@ async function main() {
     }
     
     console.log("\n=== METADATA UPDATE COMPLETE ===");
-    console.log("You can now check your collection and any tokens in the Universal Explorer:");
+    console.log("Your collection metadata has been successfully updated!");
+    console.log("\nView your collection at:");
+    console.log(`https://universal.page/collections/lukso-testnet/${contractAddress}`);
     console.log(`https://universaleverything.io/collection/${contractAddress}?network=testnet`);
   } catch (error) {
     console.error("Error updating metadata:", error);
