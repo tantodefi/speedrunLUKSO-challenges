@@ -34,7 +34,7 @@ https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-2-token-vendor
 
 🎨 Create an SVG NFT using LSP8 on LUKSO. You'll learn how to create an SVG NFT and how to use LSP8 to create a collection of NFTs. You'll also learn how to use the LSP8 contract to set the creators of the collection.
 
-https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-7-svg-nft
+https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-3-svg-lsp8-nft
 
 ---
 
