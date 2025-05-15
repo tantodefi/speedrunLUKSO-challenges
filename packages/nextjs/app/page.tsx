@@ -7,7 +7,7 @@ const Home: NextPage = () => {
     <div className="flex items-center flex-col flex-grow pt-10">
       <div className="px-5">
         <h1 className="text-center mb-8">
-          <span className="block text-2xl mb-2">SpeedRunEthereum</span>
+          <span className="block text-2xl mb-2">SpeedRunLUKSO</span>
           <span className="block text-4xl font-bold">Challenge #7: 🎁 SVG NFT</span>
         </h1>
         <div className="flex flex-col items-center justify-center">
@@ -32,6 +32,20 @@ const Home: NextPage = () => {
               </Link>{" "}
               as an example to guide your project. This will provide a solid foundation and inspiration for creating
               your own dynamic SVG NFTs.
+            </p>
+            <p>
+            🫘 A fantastic example of a fully on-chain dynamic SVG NFT on LUKSO is{" "}
+              <Link href="https://explorer.execution.mainnet.lukso.network/address/0x33517e5fedec388da59125fbabea6e2f6395c510?tab=contract" className="underline">
+                Beans.sol
+              </Link>{" "}
+              you can checkout their code to learn how to display the SVGs in token metadata.
+            </p>
+            <p>
+            🖼️ ALso make sure you checkout {" "}
+              <Link href="https://burntpix.com/" className="underline">
+              burntpix
+              </Link>{" "}
+              for some serious on-chain generative NFT inspiration.
             </p>
             <p className="mt-8">
               💬 Meet other builders working on this challenge and get help in the{" "}
