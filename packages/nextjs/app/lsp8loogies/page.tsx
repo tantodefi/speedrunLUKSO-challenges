@@ -949,7 +949,7 @@ const LSP8Loogies: NextPage = () => {
             <div>
               Double the supply of the{" "}
               <a className="underline" href="https://loogies.io/" target="_blank" rel="noopener noreferrer">
-                Original LUKSO Mainnet Loogies
+                Original Ethereum Mainnet Loogies
               </a>
             </div>
           </div>
