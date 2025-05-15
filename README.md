@@ -30,19 +30,19 @@ https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-2-token-vendor
 
 ---
 
-## 🚩 Challenge 3: 🎲 Dice Game
-
-🎰 Randomness is tricky on a public deterministic blockchain. In this challenge you will explore creating random numbers using block hash and how that may be exploitable. Attack the dice game with your own contract by predicting the randomness ahead of time to always roll a winner!
-
-https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-3-dice-game
-
----
-
-## 🚩 Challenge 4: 🎨 SVG LSP8 NFT
+## 🚩 Challenge 3: 🎨 SVG LSP8 NFT
 
 🎨 Create an SVG NFT using LSP8 on LUKSO. You'll learn how to create an SVG NFT and how to use LSP8 to create a collection of NFTs. You'll also learn how to use the LSP8 contract to set the creators of the collection.
 
 https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-7-svg-nft
+
+---
+
+## 🚩 Challenge 4: 🆙 Universal Profile Extension
+
+🆙 Create a Universal Profile Extension. You'll learn how to create a Universal Profile Extension and how to use it to create a profile on LUKSO.
+
+https://github.com/tantodefi/SpeedRunLUKSO/tree/challenge-4-universal-profile-extension
 
 ---
 
@@ -69,11 +69,13 @@ https://github.com/tantodefi/SpeedRunLUKSO/tree/Challenge-5-grid-mini-dapp
 
 Deploy your grid dapp to LUKSO testnet or mainnet and share it on [SpeedRunLUKSO.com](https://speedrunlukso.com)!
 
+https://github.com/tantodefi/SpeedRunLUKSO/tree/Challenge-6-grid-mini-app-advanced
+
 ---
 
 ## 🎉 Checkpoint: Eligible to submit your own build on speedrunLUKSO.com
 
-A place to show off your builds and meet other builders. Start crafting your Web3 portfolio by submitting your DEX, Multisig or SVG NFT build and shipping them on lukso netowork! 
+A place to show off your builds and meet other builders. Start crafting your Web3 portfolio by submitting your DEX, Multisig or SVG NFT build and shipping them on the lukso network!
 
 https://speedrunlukso.com/
 
