@@ -2,7 +2,7 @@
 
 ![readme-0](https://github.com/scaffold-eth/se-2-challenges/assets/80153681/375b7797-6839-43cd-abe5-fca94d88e300)
 
-📚 This tutorial is meant for developers that already understand the [ 🖍️ basics ](https://www.youtube.com/watch?v=MlJPjJQZtC8). 
+📚 This tutorial is meant for developers that already understand the [ 🖍️ basics ](https://www.youtube.com/watch?v=MlJPjJQZtC8).
 
 🧑‍🏫 If you would like a more gentle introduction for developers, watch our 15 video [🎥 Web2 to Web3](https://www.youtube.com/playlist?list=PLJz1HruEnenAf80uOfDwBPqaliJkjKg69) series.
 
@@ -161,21 +161,10 @@ The LSP8 standard is LUKSO's evolution of the ERC721 NFT standard, bringing seve
    - ERC721: Relies on optional URI standard (ERC721Metadata)
    - LSP8: Built-in metadata support through LSP4 Digital Asset Metadata standard, enabling richer on-chain metadata
 
-3. **Operator Permissions**
-   - ERC721: Simple approve/transfer system
-   - LSP8: More granular operator permissions with specific token authorizations
-
-4. **Transfer Hooks**
+3. **Transfer Hooks**
    - ERC721: Basic transfer events
    - LSP8: Enhanced transfer hooks with before/after transfer validations and data parameter support
 
-5. **Error Handling**
-   - ERC721: Basic require statements
-   - LSP8: Standardized error codes and messages across all LSP standards
-
-6. **Interface Detection**
-   - ERC721: Uses ERC165 interface detection
-   - LSP8: Uses LSP1 Universal Receiver for enhanced interface detection and cross-contract interaction
 
 ### Modifying Your Contract
 
@@ -221,16 +210,22 @@ After deploying your LSP8 contract, you'll need to set the metadata using the LS
 
 ```typescript
 await contract.setData(
-    LSP4_METADATA_KEY,
-    encodeMetadata({
-        name: "Your Collection",
-        description: "Your NFT Collection Description",
-        images: [{
-            width: 1000,
-            height: 1000,
-            url: "ipfs://your-image-hash",
-        }],
-    })
+  LSP4_METADATA_KEY,
+  encodeMetadata({
+    name: "Your Collection",
+    description: "Your NFT Collection Description",
+    images: [
+      {
+        width: 1000,
+        height: 1000,
+        url: "ipfs://your-image-hash",
+        verification: {
+          hash: "keccak256(bytes)",
+          data: "<keccak256_hash_of_image>",
+        },
+      },
+    ],
+  })
 );
 ```
 
@@ -299,7 +294,7 @@ yarn test
 
 #### Configuration of Third-Party Services for Production-Grade Apps.
 
-By default, 🏗 Scaffold-ETH 2 provides predefined API keys for popular services such as Alchemy and Etherscan. This allows you to begin developing and testing your applications more easily, avoiding the need to register for these services.  
+By default, 🏗 Scaffold-ETH 2 provides predefined API keys for popular services such as Alchemy and Etherscan. This allows you to begin developing and testing your applications more easily, avoiding the need to register for these services.
 This is great to complete your **SpeedRunLUKSO**.
 
 For production-grade applications, it's recommended to obtain your own API keys (to prevent rate limiting issues). You can configure these at:
@@ -348,4 +343,4 @@ yarn verify --network luksoTestnet
 
 > 🏃 Head to your next challenge [here](https://github.com/Dev-Rel-as-a-Service/SpeedRunLUKSO).
 
-> 💬 Problems, questions, comments on the stack? Post them to the [SpeedRunLUKSO developers chat]()
+> 💬 Problems, questions, comments on the stack? Post them to the [SpeedRunLUKSO developers chat](https://t.me/+lDvJ12OSDEVhYWQ0)
