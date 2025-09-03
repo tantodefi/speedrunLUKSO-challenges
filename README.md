@@ -169,11 +169,11 @@ you should see the homepage of our se2 dapp open with a button to connect your U
 
 here we're showing you an example of how we're detecting a grid owner from the contextaccounts
 
-you can see that once we connect we have access to another account which we can use for transactions 
+you can see that once we connect we have access to another account which we can use for transactions
 
 ![Connected UP](packages/nextjs/public/connected-up.png)
 
-so from here - you can basically take one of the previous example challenges and make it into a grid mini dapp. 
+so from here - you can basically take one of the previous example challenges and make it into a grid mini dapp.
 
 🌐 Create a grid mini-app from one of the previous challenges builds using the `@lukso/up-provider` package and host the grid app on your Universal Everything profile. The goal here is to get one of the previous starter builds live as a grid mini-app, be creative and maybe even ship them to mainnet!
 
@@ -184,7 +184,7 @@ so from here - you can basically take one of the previous example challenges and
 
 Don't be scared to add more features to these basic examples making them even more interesting mini dapps!
 
-think about how to make interesting new UI's based on when the added contexts are loaded for example in the context of a grid maybe render differently - a great example of this is the official mini dapp example starter repo form the 
+think about how to make interesting new UI's based on when the added contexts are loaded for example in the context of a grid maybe render differently - a great example of this is the official mini dapp example starter repo form the
 LUKSO team https://github.com/lukso-network/miniapp-nextjs-template
 
 alternatively you can also build a new dapp from scratch - and search for ideas/code/inspiration on https://app.buidlguidl.com/builds
@@ -234,4 +234,6 @@ Run the yarn verify --network luksoTestnet command to verify your contracts on L
 
 > 🏃 Head to your next challenge [here](https://speedrunlukso.com).
 
-> 💬 Problems, questions, comments on the stack? Post them to the [Lukso Builders Telegram]()
+
+> 💬 Problems, questions, comments on the stack? Post them to the [LUKSO Developers Link](https://t.me/+lDvJ12OSDEVhYWQ0)
+
