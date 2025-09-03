@@ -72,11 +72,11 @@ you should see the homepage of our se2 dapp open with a button to connect your U
 
 here we're showing you an example of how we're detecting a grid owner from the contextaccounts
 
-you can see that once we connect we have access to another account which we can use for transactions 
+you can see that once we connect we have access to another account which we can use for transactions
 
 ![alt text](grid-owner-1.png)
 
-think about how to make interesting new UI's based on dapps whose when are loaded in the context of a grid maybe render differently - a great example of this is the official mini dapp example starter repo form the 
+think about how to make interesting new UI's based on dapps whose when are loaded in the context of a grid maybe render differently - a great example of this is the official mini dapp example starter repo form the
 LUKSO team https://github.com/lukso-network/miniapp-nextjs-template
 
 alternatively you can also build a new dapp from scratch - and search for ideas/code/inspiration on https://app.buidlguidl.com/builds
@@ -128,4 +128,5 @@ _Create all the required Checkpoints for the Challenge, can also add Side Quests
 
 > 🏃 Head to your next challenge [here](https://speedrunlukso.com).
 
-> 💬 Problems, questions, comments on the stack? Post them to the [Lukso Builders Telegram]()
+> 💬 Problems, questions, comments on the stack? Post them to the [LUKSO Developers Link](https://t.me/+lDvJ12OSDEVhYWQ0)
+
