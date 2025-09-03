@@ -422,4 +422,5 @@ Run the `yarn verify --network your_network` command to verify your contracts on
 
 > 🏃 Head to your next challenge [here](https://speedrunethereum.com).
 
-> 💬 Problems, questions, comments on the stack? Post them to the [🏗 scaffold-eth developers chat](https://t.me/joinchat/F7nCRK3kI93PoCOk)
+> 💬 Problems, questions, comments on the stack? Post them to the [SpeedRunLUKSO developers chat](https://t.me/+lDvJ12OSDEVhYWQ0)
+
