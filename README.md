@@ -100,10 +100,6 @@ LSP7 is LUKSO's evolution of the ERC20 token standard, bringing several key impr
    - ERC20: No standardized metadata
    - LSP7: Built-in LSP4 Digital Asset Metadata standard support
 
-5. **Error Handling**
-   - ERC20: Basic require statements
-   - LSP7: Standardized error codes across all LSP standards
-
 ### Setting Up Your LSP7 Token
 
 We've created a basic LSP7 token contract in `packages/hardhat/contracts/YourLSP7Token.sol`. Key features:
@@ -118,8 +114,7 @@ After deploying your LSP7 token, you'll need to set its metadata. Create a scrip
 
 ```typescript
 import { hexlify, toUtf8Bytes } from "ethers";
-// LSP4 keys
-const LSP4Metadata = "0x5ef4c411a5b2b5f2e2d1b5c8c2b1b4e4c4b9b1b5c8c2b1b4e4c4b9b1b5c8c2b1";
+import {_LSP4_METADATA_KEY} from "@lukso/lsp4-contracts/contracts/LSP4Constants.sol"; // find equivalent in JS/TS (DONT HARDCODE)
 
 // Set advanced metadata (icon, description, links)
 const metadata = {
@@ -129,6 +124,10 @@ const metadata = {
       width: 256,
       height: 256,
       url: "ipfs://QmExampleIconHash",
+      verification: {
+        hash: "keccak256(bytes)",
+        data: "<keccak256_hash_of_image>",
+      },
     },
   ],
   links: [
@@ -138,7 +137,10 @@ const metadata = {
     },
   ],
 };
-await tokenContract.setData(LSP4Metadata, hexlify(toUtf8Bytes(JSON.stringify(metadata))));
+await tokenContract.setData(
+  LSP4Metadata,
+  hexlify(toUtf8Bytes(JSON.stringify(metadata)))
+);
 ```
 
 ---
@@ -395,7 +397,7 @@ await vendor.transferOwnership("**YOUR FRONTEND ADDRESS**");
 
 #### Configuration of Third-Party Services for Production-Grade Apps.
 
-By default, 🏗 Scaffold-ETH 2 provides predefined API keys for popular services such as Alchemy and Etherscan. This allows you to begin developing and testing your applications more easily, avoiding the need to register for these services.  
+By default, 🏗 Scaffold-ETH 2 provides predefined API keys for popular services such as Alchemy and Etherscan. This allows you to begin developing and testing your applications more easily, avoiding the need to register for these services.
 This is great to complete your **SpeedRunLUKSO**.
 
 For production-grade applications, it's recommended to obtain your own API keys (to prevent rate limiting issues). You can configure these at:
