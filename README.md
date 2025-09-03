@@ -359,3 +359,6 @@ The Matrix theme includes:
 - Proper animation timing
 
 Enjoy creating your Matrix-themed Loogies NFTs on LUKSO!
+
+> 💬 Problems, questions, comments on the stack? Post them to the [SpeedRunLUKSO developers chat](https://t.me/+lDvJ12OSDEVhYWQ0)
+
