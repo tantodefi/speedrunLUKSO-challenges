@@ -18,10 +18,6 @@
    - ERC721: Basic transfer with approval system
    - LSP8: Enhanced transfers with hooks and data parameters
 
-4. **Interface Support**
-   - ERC721: Basic ERC165 interface detection
-   - LSP8: LSP1 Universal Receiver for advanced contract interactions
-
 ### 📝 Contract Changes
 
 We've provided two versions of the collectible contract:
@@ -257,7 +253,7 @@ yarn start
 
 #### Configuration of Third-Party Services for Production-Grade Apps.
 
-By default, 🏗 Scaffold-ETH 2 provides predefined API keys for popular services such as Alchemy and Etherscan. This allows you to begin developing and testing your applications more easily, avoiding the need to register for these services.  
+By default, 🏗 Scaffold-ETH 2 provides predefined API keys for popular services such as Alchemy and Etherscan. This allows you to begin developing and testing your applications more easily, avoiding the need to register for these services.
 This is great to complete your **SpeedRunEthereum**.
 
 For production-grade applications, it's recommended to obtain your own API keys (to prevent rate limiting issues). You can configure these at:
@@ -288,7 +284,7 @@ This project includes an enhanced version of the LSP8Loogies contract called `LS
 
 ### Key Features of LSP8LoogiesEnhanced
 
-1. **Matrix-Themed Design**: 
+1. **Matrix-Themed Design**:
    - Dynamic SVG generation with Matrix-inspired falling code animations
    - Glow effects and improved visual presentation
    - Path-based Loogies instead of basic shapes for more interesting designs
